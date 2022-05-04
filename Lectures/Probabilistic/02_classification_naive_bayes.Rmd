@@ -1,0 +1,966 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.13.8
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+# Multi-features classification and  Naive Bayes
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+In this notebook we will continue to work with the gender classifier based on height. We will use some real(?) data. We will also add weight as additional  feature. This will introduce us to Naive bayes classifier. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as st
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+# %matplotlib inline
+plt.rcParams["figure.figsize"] = [12,8]
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+## Height & weight data set
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+The only data I could find was a [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height). This data set does not contain any  description of origin but use of inches and pounds suggests an american or english population. The data consists of 10000 points each specifying sex, height and weight of one person.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+The data is in popular "coma separated values" (CSV) format. We will use  [pandas library](https://pandas.pydata.org) to read it. Pandas is a very popular library for working with dataframes and series. It would be really worth your time to become acquainted with it. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+import pandas as pd
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+data = pd.read_csv('../../Data/HeightWeight/weight-height.csv')
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The `data` is a [Dataframe](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+type(data)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+which is a kind of "table on steroids". We can look at first _n_ rows using `head` method
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+data.head(n=3)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Another useful method is 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+data.info()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+data.describe()
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+which gives a more detailed summary of the numerical data contained in the dataframe. Looking at the numbers we can determine that the units are not metric. A good guess would be inches and pounds.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+inch = 0.01 * 2.54 # m
+pound = 0.453 # kg
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+data['Height'] = data['Height'] *inch 
+data['Weight'] = data['Weight'] *pound
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+data['Height'] is data.Height
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Above I have used `data.Height` notation to access the 'Height' column of the data frame. This is "syntactic sugar" and is equivalent to `data['Height']`
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+data.describe()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Now the numbers look realistic. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We can check that the file contains equal number of women and men data
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+(data.Gender=='Female').sum()
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Train/Test split
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Before we proceed any further we will "do the right thing" and split the data into training and testing set using a function from another very useful library `scikit-learn`. By now you should know why this is  neccesary but let me reiterate this. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In supervised learning our goal __is not to obtain good classfication on the  labeled data__ we have! We want it to perform well on the  new data that we do not know the labels of. Of course if it cannot classify the training data correctly it will not classify other data correctly as well. But the oposite statement is not true! In principle the classifier could just learn the training examples "by heart" and get a perfect score.  That would be an extreme example of _overfitting_. Overfitting as the name implies means that the classifier has learned to exploite some peculiarities of the training data set and does not _generalise_ well to other data. 
+
+Thus it's the performance on unseen data i.e. generalisation that is our real goal.
+
+That's why we must __always__ keep a portion of our dataset for testings purposes. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.model_selection import  train_test_split
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+#by fixing the seed we guarantee that we can split the set in same way each time
+#this maybe handy for debuging purposes
+seed = 77678 
+train_data, test_data  = train_test_split(data,test_size=0.25,  random_state=seed, shuffle=True)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+print(len(train_data), len(test_data))
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Let's see how the data looks like. To visualise a  distribution we will use a _histogram_ of the values. Pandas have a handy built in method that calculates and plots histogram, althought it just delegates the job to numpy and matplotlib. We will create the figure and matplotlib axes ourselfs for more control and pass axes to pandas hist function. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("height (m)")
+ax.set_ylabel("P(h)")
+train_data.Height.hist(bins=32, density=True, ax=ax , label ='train', color='lightgrey');
+test_data.Height.hist(bins=32, density=True,  ax=ax, histtype='step', label ='test' , color='red');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+You can look up the description of parameters in [pandas.DataFrame.hist](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.hist.html) and [matplotlib.pyplot.hist](https://matplotlib.org/3.2.1/api/_as_gen/matplotlib.pyplot.hist.html) documentation. The one  I have used indicate that the height values should be divided into 32 bins with range of the bins calculated automatically. The `density` parameter set to `True` makes the histogram normalised  so the area under it is  equal to one. This enables an easy comparison with probability density functions and to compare different histograms. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We have superposed test data histogram to check if the distributions are similar. This is quite important we need the  training set to be representative. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Accesing one column  returns a [Series](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.html) object
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+type(train_data['Height'])
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+###  Distribution by gender
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Going back to the histogram we see that the  distribution looks somewhat "normal-like" but it is rather flat at the top. But actually we do not expect it to be normal, as it contains both women and men data. Let's look at each gender separately.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data_F = train_data[train_data.Gender=='Female']
+train_data_M = train_data[train_data.Gender=='Male']
+print(len(train_data_F), len(train_data_M))
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+test_data_F = test_data[test_data.Gender=='Female']
+test_data_M = test_data[test_data.Gender=='Male']
+print(len(test_data_F), len(test_data_M))
+```
+
+```{python}
+# setting colors for consistency throughout the notebook you can subsitute here your favorite "gender colors" :) 
+f_color = 'blue'
+m_color ='orange'
+color = 'grey'
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("height (m)")
+ax.set_ylabel("P(h|S)")
+train_data_F.Height.hist(bins=32, density=True, ax=ax , color=f_color, alpha=0.7, label='Women');
+train_data_M.Height.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7, label='Men');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+It is also a good idea to check again if the train and test data have roughly same distribution as we have alredy done for the joint data. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("height (m)")
+ax.set_ylabel("P(h|S)")
+train_data_F.Height.hist(bins=32, density=True, 
+                         ax=ax , color=f_color, alpha=0.7, histtype='step', label='Women train');
+train_data_M.Height.hist(bins=32, density=True, 
+                         ax=ax , color=m_color, alpha=0.7, histtype='step', label="Men train");
+test_data_F.Height.hist(bins=32, density=True, 
+                         ax=ax , color=f_color, alpha=0.7, histtype='step', linestyle="--", label='Women test');
+test_data_M.Height.hist(bins=32, density=True, 
+                         ax=ax , color=m_color, alpha=0.7, histtype='step', linestyle="--", label='Men test');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Histograms look OK but check what happens if we pass the `shuffle=False` parameter to `train_test_split` function. Can you explain what is happening?
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Estimating parameters of the Gaussian distribution
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Let's compare those histograms with normal distribution. We will use the `fit` function of the `scipy.stats` normal distribution object. This function calculates the _maximal likelihood_ estimates of the distribution parameters:  mean and standard deviation in this case. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+(mean_F, std_F) = st.norm.fit(train_data_F.Height)
+(mean_M, std_M) = st.norm.fit(train_data_M.Height)
+print(mean_F, std_F)
+print(mean_M, std_M) 
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We create the `scipy.stats` distribution objects
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+As you can see those number differ slightly from the ones we have used in the classification notebook so  they clearly correspond to some other population, but it does not matter for our purposes.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+pd_F = st.norm(mean_F, std_F)
+pd_M = st.norm(mean_M, std_M)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and use them to plot the probability distribution functions over the histograms
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("height (m)")
+ax.set_ylabel("P(h|S)")
+train_data_F.Height.hist(bins=32, density=True, ax=ax , color=f_color, alpha=0.7);
+train_data_M.Height.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7);
+hs =np.linspace(1.3,2.1,100)
+ax.plot(hs, pd_F.pdf(hs), c=f_color);
+ax.plot(hs, pd_M.pdf(hs), c=m_color);
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The results look reasonable and we will assume the normal distribution of heights for each sex throughout this notebook. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Maximal likelihood estimator
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Now let's open up the black box of the `fit` function. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The _maximal likelihood_ estimates returned by the `fit` function are the usual
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\bar{y}\equiv\frac{1}{n}\sum_{i=1}^n y_i$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$s^2\equiv \overline{y^2}-\bar{y}^2\qquad \bar{y^2}\equiv\frac{1}{n}\sum_{i=1}^n y^2_i$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+#### Caveat
+<!-- #endregion -->
+
+The variance estimator $s^2$ is [_biased_](https://en.wikipedia.org/wiki/Bias_of_an_estimator) and very often its unbiased version 
+
+
+$$\frac{n}{n-1}s^2$$
+
+<!-- #region slideshow={"slide_type": "-"} -->
+is used instead. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Which version is calculated is controled by the parameter `ddof` of `std` function in numpy or pandas. But please be warned that in numpy the default value of this parameter is zero, correpsonding to $s$ while in pandas this is one and returns the unbiased version. Of course for large $n$ the difference is negligible. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Those are the basic facts from statistics and I assume you are acquainted with them :) But to refresh your memory I will present here the derivation of the maximal likelihood estimator for normal distribution. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Given the mean $\mu$ and standard deviation $\sigma$ the  probability of obtaining a sequence of $n$ random  values $y_i$ is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Likelihood
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$P(y_1,\ldots,y_n|\mu,\sigma) = \prod_{i=1}^n \frac{1}{\sqrt{2\pi\sigma^2}}e^{\displaystyle -\frac{(y_i-\mu)^2}{2\sigma^2}}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Droping an unimportant constant factor this can rewritten as
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sigma^{-n} e^{\displaystyle -\frac{1}{2\sigma^2}\sum_{i=1}^n(y_i-\mu)^2}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The sum in the exponential can be expanded as
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$\sum_{i=1}^n(y_i-\mu)^2 
+= \sum_{i=1}^n\left( y_i^2-2y_i\mu + \mu^2\right)
+=  \sum_{i=1}^n y_i^2 - 2\sum_{i=1}^n y_i\mu +n \mu^2
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+which is equal to
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+ $$n \bar{y^2} - 2n\bar{y} \mu +n \mu^2 = n \left(\bar{y^2} - 2\bar{y} \mu + \mu^2\right) $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+which can be further rewritten as
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\bar{y^2} - 2\bar{y} \mu + \mu^2 
+= \bar{y^2} -\bar{y}^2 +\bar{y}^2 - 2\bar{y} \mu + \mu^2
+= \bar{y^2} -\bar{y}^2 +\left(\bar{y}-\mu\right)^2 
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+So finally we obtain
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+#### Likelihood
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$P(y_1,\ldots,y_n|\mu,\sigma)\propto \sigma^{n} e^{\displaystyle -\frac{n}{2\sigma^2}\left(\bar{y}-\mu\right)^2-\frac{n}{2\sigma^2}s^2}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+When viewed as function of $y_i$ this is a _sampling distribution_. But we can view this as a function of $\mu$ and $\sigma$. Then this is no longer a probability distribution and is called the _likelihood_. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+### Maximal likelihood
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The maximal likelihood estimators are obtained by finding the values of $\mu$ and $\sigma$ that maximise the likelihood. We are looking for the parameters that make our data most probable. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Because logarithm is a monotonicaly increasing function we can look for the maximum of the logarithm of the likelihood which has a much simpler form
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\log P(y_1,\ldots,y_n|\mu,\sigma)= -\frac{n}{2}\log\sigma^2-\frac{n}{2\sigma^2}\left(\bar{y}-\mu\right)^2-\frac{n}{2\sigma^2}s^2 +C$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Differentiating with repect to $\mu$ we obtain equation
+:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$\frac{n}{2\sigma^2}\left(\bar{y}-\mu\right)=0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+with an obvious solution 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\mu=\bar{y}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Differentiatig with respect to $\sigma^2$ gives:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$-\frac{n}{2\sigma^2} +\frac{n}{2\sigma^4}(\bar{y}-\mu)^2+\frac{n}{2\sigma^4}s^2=0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+After inserting the solution for $\mu$ we get
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{n}{2\sigma^2} =\frac{n}{2\sigma^4}s^2$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+with solution
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sigma^2 = s^2$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Classifier
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The classifier can be now constructed in the same way as in previous lecture. To make this notebook self contained I will repeat those calculations but wrap them up in couple of functions. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+def make_pdf_P_cond(labels, data):
+    """Takes labels (0,1) and a single feature and returns the conditional 
+    probability distribution function of the   positive label given the feature assuming
+    normal distribution of the  feature values.
+    """
+    
+    positives = data[labels==1]
+    negatives = data[labels==0]
+    
+    pdf_cond_P = st.norm(*st.norm.fit(positives)).pdf
+    pdf_cond_N = st.norm(*st.norm.fit(negatives)).pdf
+    
+    P_P = labels.mean()
+    P_N = 1-P_P
+    
+    def pdf(x):
+        return pdf_cond_P(x)*P_P/(pdf_cond_P(x)*P_P+pdf_cond_N(x)*P_N)
+        
+    return pdf
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+pdf_F_cond_h  = make_pdf_P_cond(train_data.Gender=='Female', train_data.Height)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+hs =np.linspace(1.3, 2.1,100)
+ax.plot(hs, pdf_F_cond_h(hs));
+ax.set_xlabel("Height [m]");
+ax.set_ylabel("P(F|h)");
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+from scipy.optimize import fsolve
+threshold = fsolve(lambda h: pdf_F_cond_h(h)-0.5, 1.7)
+print(threshold)
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+from collections import namedtuple
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+ConfusionMatrix = namedtuple('ConfusionMatrix',['TP','FP', 'FN', 'TN'])
+
+def confusion_matrix(labels, probability, th=0.5):
+    """
+    Calculates the confusion matrix from true labels and predicted probabilities
+    
+    Parameters:
+    labels -- 
+    """
+    p = (labels == 1).sum()
+    n = (labels == 0).sum()
+    
+    pred = (probability >= th)
+    fp = (pred > labels).sum()
+    fn = (pred < labels).sum()
+    
+    return ConfusionMatrix(p-fn, fp, fn, n-fp)
+
+def rates(cm):
+    P = cm.TP + cm.FN
+    N = cm.FP + cm.TN
+    
+    tpr = cm.TP/P
+    fpr = cm.FP/N
+    fnr = cm.FN/P
+    tnr = cm.TN/N
+    
+    return tpr, fpr, fnr, tnr
+    
+def accuracy(cm):    
+    P = cm.TP + cm.FN
+    N = cm.FP + cm.TN
+    
+    return (cm.TP+cm.TN)/(P+N)
+
+def precission(cm):
+    return (cm.TP)/(cm.TP+cm.FP)
+    
+
+def describe(cm):
+    P = cm.TP + cm.FN
+    N = cm.FP + cm.TN
+    
+    tpr, fpr,fnr, tnr = rates(cm)
+    
+    print("Total = {:d} (P = {:d}, N = {:d})".format(P+N, P,N))
+    print("TPR = {:5.3f} FPR = {:5.3f}".format(tpr,fpr))
+    print("FNR = {:5.3f} TNR = {:5.3f}".format(fnr,tnr))
+    
+    print("Accuracy  = {:5.3f}".format(accuracy(cm)) )
+    print("Precision = {:5.3f}".format(precission(cm)) )
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+describe(confusion_matrix(train_data.Gender=='Female', pdf_F_cond_h(train_data.Height)) )
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+cm_test = confusion_matrix(test_data.Gender=='Female', pdf_F_cond_h(test_data.Height))
+tpr, fpr,_,_=rates(cm_test)
+describe(cm_test )
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+from sklearn.metrics import roc_auc_score, roc_curve
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fprs, tprs, thds = roc_curve(test_data.Gender=='Female', pdf_F_cond_h(test_data.Height))
+auc = roc_auc_score(test_data.Gender=='Female', pdf_F_cond_h(test_data.Height))
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+def roc_plot(plt, title ='ROC', figsize=[8,8]):
+    """
+    Returns pyplot figure and axes object designed for plotting ROC curve. 
+    
+    It sets aspect ratio to one, labels the axes and sets the title.
+    
+    Parameters:
+    plt : pyplot module
+    title : the title of the plot
+    figsize : Figure size in inches 
+    """
+    fig, ax = plt.subplots(figsize=figsize)
+    ax.set_aspect(1)
+    ax.set_xlabel('FPR');
+    ax.set_ylabel('TPR');
+    ax.set_title(title)
+    ax.plot([0,1,1,0,0],[0,0,1,1,0], '-', color='grey', linewidth=1)
+    return fig,ax
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = roc_plot(plt, 'Test data ROC')
+roc = ax.plot(fprs,tprs, color='blue', linewidth=1);
+ax.scatter([fpr],[tpr],s = 30, edgecolor='blue', zorder=5, facecolor='blue');
+ax.text(0.7, 0.8, "AUC = {:4.2f}".format(auc), fontsize=12);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+This plot looks slightly worse then the one  we did last time, but that's becase we have only 2500 data points instead of 100000 that we have generated by Monte-Carlo.  
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's finish with some graphical iterpretation.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("height (m)")
+ax.set_ylabel("P(h|S)")
+test_data_F.Height.hist(bins=32, density=True, ax=ax , color=f_color, alpha=0.7, label='Women');
+test_data_M.Height.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7, label='Men');
+hs =np.linspace(1.3,2.1,100)
+ax.plot(hs, pd_F.pdf(hs), c=f_color);
+ax.plot(hs, pd_M.pdf(hs), c=m_color);
+plt.axvline(threshold, c='red', linewidth = 1);
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Those are the histograms of the test data with distributions derived from the traning data. The red vertical line marks the threshold for classfication. Blue on the left are true positives, orange on the left are false positives, blue on the right are false negatives and orange on right are true negatives. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+# More features
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Using one feature is not very realistic. Normally we would use tens, hundreds or even thousands of different features. Each feature potentially adds information and increases the quality of the classifier. In our data set we have one more feature that we can use: weight. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Visualising multidimensional data is hard. We can start by looking at them one by one. We have already looked at the distribution of heights so now we will plot the distribution of weights. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Weight
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("Weight [m]")
+ax.set_ylabel("P(w|S)")
+train_data_F.Weight.hist(bins=32, density=True, ax=ax , color=f_color, alpha=0.7, label='Women');
+train_data_M.Weight.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7, label='Men');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The distribution of weights by gender looks reasonably normal, but what we need is the join distribution of height and weight.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$P(h,w|S)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+This we can visualize using a _scatter_ plot 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+plt.scatter(train_data_F.Height, train_data_F.Weight, alpha=0.2, c = f_color, label='Women');
+plt.scatter(train_data_M.Height, train_data_M.Weight, alpha=0.2, c = m_color, label='Men');
+plt.xlabel('Height')
+plt.ylabel('Weight');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Unfortunatelly this plot quickly saturates and it is hard to judge the density of points in different regions (you can try to play with the alpha parameter). 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We can use 2D histograms, but then it is not possible to separate data for women and men on the same plot. Histogram below displays all the data together. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+hb = plt.hist2d(train_data['Height'], train_data['Weight'], bins=32, density=True);
+plt.xlabel('Height [m]')
+plt.ylabel('Weight [kg]')
+plt.colorbar(hb[3]);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Sometimes we can get a nicer picture with hexagonal bins:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+hb = plt.hexbin(train_data['Height'], train_data['Weight'], bins=20);
+plt.xlabel('Height [m]')
+plt.ylabel('Weight [kg]')
+plt.colorbar(hb);
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+One way to proceed would be to try to model the joint distribution of  height and weight for each sex as a two dimensional normal distribution. Another, and that is the one we will pursue here is to model them independently. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## (In)dependence
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In order to do that we require the features to be at least approximately independent. That is obviously not the case for height and weight. Common sense tells us that taller persons will be usually heavier. That is borne out the plots above as the points cluster around the diagonal. We can check this by calculating the _correlation_ between the  height and weight.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Correlation can be easily calculated using [pandas.Series.corr](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.Series.corr.html) or [numpy.corrcoef](https://docs.scipy.org/doc/numpy/reference/generated/numpy.corrcoef.html) build in functions. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data[['Height', 'Weight']].corr()
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+This gives us a symmetric correlation matrix. On the diagonal we always have 1.0. The off diagonal  entries correspond to correlation between two variables. As expected height and weight are highly correlated (the maximal value of correlation  coefficient is one). 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's look separately at each sex
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data_F = train_data.loc[data['Gender']=='Female']
+train_data_M   = train_data.loc[data['Gender']=='Male']
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data_F[['Height', 'Weight']].corr()
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data_M[['Height', 'Weight']].corr()
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### BMI 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In order to  reduce the correlations we will use the [Body Mass Index](https://en.wikipedia.org/wiki/Body_mass_index) instead of weight. Its idea was exactly to provide a height independent characterisation of persons weight. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+data['BMI'] = data['Weight']/data['Height']**2
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Because we have changed the data we have to redo the train test split. Using same seed will gives us exactly same sets as before which will be convenient for comparison. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data, test_data  = train_test_split(data,test_size=0.25, random_state=seed)
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+from sklearn.linear_model import LinearRegression
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+reg = LinearRegression().fit(train_data['Height'].values.reshape(-1,1), train_data['BMI'].values)
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+hs = np.linspace(1.5,1.9)
+plt.scatter(train_data['Height'],train_data['BMI'], alpha=0.2, c=color);
+plt.xlabel('Height')
+plt.ylabel('BMI');
+plt.plot(hs, reg.predict(hs.reshape(-1,1)));
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The scatter plot  still indicates rather strong correlation, but correlation coefficient is actually lower
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+train_data[['Height', 'BMI']].corr()
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+train_data_F = train_data.loc[data['Gender']=='Female']
+train_data_M   = train_data.loc[data['Gender']=='Male']
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+reg_F = LinearRegression().fit(train_data_F['Height'].values.reshape(-1,1), train_data_F['BMI'].values)
+reg_M = LinearRegression().fit(train_data_M['Height'].values.reshape(-1,1), train_data_M['BMI'].values)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+plt.scatter(train_data_F['Height'],train_data_F['BMI'], alpha=0.2, c = f_color, label='Women');
+plt.scatter(train_data_M['Height'], train_data_M['BMI'], alpha=0.2, c = m_color, label='Men');
+plt.plot(hs[hs>1.6],reg_M.predict(hs[hs>1.6].reshape(-1,1)), color='red')
+plt.plot(hs[hs<1.8],reg_F.predict(hs[hs<1.8].reshape(-1,1)), color='red')
+plt.xlabel('Height')
+plt.ylabel('BMI');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Now each cluster look less correlated, especially men. And indeed the correlation coefficients are lower  for each sex
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+train_data_F[['Height', 'BMI']].corr()
+```
+
+```{python slideshow={'slide_type': '-'}}
+train_data_M[['Height', 'BMI']].corr()
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Conditional independence
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+What we have done  was to check for _conditional independence_. Two random variables $X$ and $Y$ are idenpendent conditioned on third variable $Z$ if 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$P(X=x,Y=y|Z=z)=P(Y=y|Z=z)P(Y=y|Z=z)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Important point to note here is that two variables can be dependent on each other but be independent when coditioned on third variable.  This happens when _e.g._ both variables $X$ and $Y$ depend on $Z$ but not on each other.
+
+
+ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Take for example the number of ice creams sold and number of men in t-shirts on the street. Those variables are most probably correlated as they both depend on the air temperature. If we see lots of men in t-shirts it is probable that it is a nice warm day and consequently the ice creams sales are higher. If we condition on temperature that is  look only at the days with same air temperature we will probably find  that number of ice cream sold is idenpendent of number of men in t-shirts. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Naive Bayes classifier
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We have not established that the height and BMI are independent conditioned on sex, but we how shown that that dependence is significantly reduced. This is a rationale behind _Naive Bayes_ classifier.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's assume that we have $k$ features $X_i$ that we want to use to predict class $C$. Approach that we have used so far would require knowledge of the join probability
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(X_1=x_1,\ldots,X_k=k_k|C=c)$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In Naive Bayes we __assume__ that those features are independent conditionned on class random variable $C$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(X_1=x_1,\ldots,X_k=x_k|C=c)=P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c)$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and so 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$P(C=c|X_1=x_1,\ldots,X_k=x_k)= \frac{P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)}{\sum_c P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)}$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+In our example this translates to (I have used $B$ and $b$ to denote BMI random variable and its value)
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(S=f|H=h, B = b) = \frac{P(H=h|S=f)P(B=b|S=f)P(S=f)}
+{P(H=h|S=f)P(B=b|S=f)P(S=f)+
+P(H=h|S=m)P(B=b|S=m)P(S=m)}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We know that the height distribution for each sex can be approximated as normal. We have to check if this is also true for BMI.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel("BMI (m)")
+ax.set_ylabel("P(bmi|S)")
+train_data_F.BMI.hist(bins=32, density=True, ax=ax , color=f_color, alpha=0.7);
+train_data_M.BMI.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7);
+bmis =np.linspace(15,33,100)
+pdf_bmi_F = st.norm(*st.norm.fit(train_data_F.BMI)).pdf
+ax.plot(bmis, pdf_bmi_F(bmis), c=f_color);
+pdf_bmi_M = st.norm(*st.norm.fit(train_data_M.BMI)).pdf
+ax.plot(bmis, pdf_bmi_M(bmis), c=m_color);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+This looks resonable so we will stick with this choice. The function below  constructs the  $P(S=f|H=h, B=b)$ function  from height and BMI data
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+def make_pdf_P_cond_NB(labels, h, bmi ):
+    
+    positives = labels==1
+    negatives = labels==0
+    
+    pdf_h_P = st.norm(*st.norm.fit(h[positives])).pdf
+    pdf_h_N = st.norm(*st.norm.fit(h[negatives])).pdf 
+    
+    pdf_bmi_P = st.norm(*st.norm.fit(bmi[positives])).pdf
+    pdf_bmi_N = st.norm(*st.norm.fit(bmi[negatives])).pdf                  
+                      
+    
+    P_P = labels.mean()
+    P_N = 1-P_P
+    
+    def pdf(ha, bmia):
+        p_prod = pdf_h_P(ha)*pdf_bmi_P(bmia)*P_P
+        n_prod = pdf_h_N(ha)*pdf_bmi_N(bmia)*P_N
+        
+        
+        return p_prod/(p_prod +n_prod)
+        
+    return pdf
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+nb_prob = make_pdf_P_cond_NB(train_data['Gender']=='Female', train_data.Height, train_data.BMI)
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+nb_cm  = confusion_matrix(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI) )
+nb_tpr, nb_fpr, _,_ = rates(nb_cm)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+describe(nb_cm)
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+nb_fprs, nb_tprs, nb_thds = roc_curve(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI) )
+nb_auc = roc_auc_score(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI) )
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig,ax = roc_plot(plt)
+ax.plot(fprs, tprs, label='Heigh')
+ax.scatter([fpr],[tpr], color='blue', zorder = 5)
+ax.plot(nb_fprs, nb_tprs,  label = "Heigh & BMI")
+ax.scatter([nb_fpr],[nb_tpr], color='orange', zorder = 5)
+ax.text(0.4,0.8,"AUC = {:.3f}\nAUC NB = {:.3f}".format(auc, nb_auc))
+ax.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As we can see adding weight  feature in form of the BMI substantially increased the quality of our classifier. 
+<!-- #endregion -->

@@ -1,0 +1,632 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.13.8
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python slideshow={'slide_type': 'skip'}}
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+# %matplotlib inline
+plt.rcParams["figure.figsize"] = [12,8]
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Training (Naive) Bayes
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+As we have shown in the previous lectures training a Bayes classifier amounts to finding the conditional probability distributions of the features $\mathbf{f}$ given the class label $c$. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$P(\mathbf{F}=\mathbf{f}|C=c)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In case of the Naive bayes classifier the $n_f$ features are conditionally independent 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(\mathbf{F}=\mathbf{f}|C=c)=\prod_{i=0}^{n_f-1} P(F_i=f_i|C=c)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+so we can estimate   probality distribution  for each feature separately. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Categorical features
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In case of categorical features each $x_i$ has a finite $m_i$  number of possible values (categories) that, without any loss of generality we can  assume, take values $0,\ldots,m_i-1$. In the same way we  will assume that the class labels take $n_c$ integer values $c=0,\ldots,n_c-1$. 
+
+So for each feature we have  to estimate  $n_c\times m_i$ probabilities 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$p^{(c)}_{ij} = P(F_i = j|C = c)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Of course they are not all idependent. Normalisation requires
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sum_{j=0}^{m_i-1} p^{(c)}_{ij}=1,\quad i=0,\ldots,n_f,\; c=0,\ldots,n_c$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Let $\mathbf{X}$ denote the $n_s \times n_f$ matrix of training data where $n_s$ is the number of samples. So $X_{hi}$ denotes the value of the ith   feature in  sample $h$. Let  $y_h$ denote the corresponding label
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$X_{hi} \in \{0,\ldots,m_i-1\},\quad  y_h \in \{0,\ldots,n_c-1\},\quad h = 0,\ldots,n_s-1$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's introduce some more notation. $n_c$ will denote the number of samples belonging to class $c$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$n^{c}=\sum_{h=0}^{n_s-1}\delta_{y_h,c},\qquad \delta_{a,b}=
+\begin{cases}
+1 & a=b\\
+0 & a\neq b
+\end{cases}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+and $n^{(c)}_{ij}$ the number of samples of class $c$ with feature $i$ equal to  $j$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$n^{(c)}_{ij} = \displaystyle
+\sum_{h=0}^{n_s-1} \delta_{X_{hi},j}\delta_{y_h,c}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+To estimate the probabilities we will use a smoothed estimator 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$p^{(c)}_{ij} = \frac{n^{(c)}_{ij}+\alpha}{n^c+m_i\alpha} $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+where $\alpha\ge 0$ is a smoothing parameter. The use of  non-zero smoothing parameter ensures a non-vanishing probability even when $n^{(c)}_{ij}=0$. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Example: Car evaluation data set
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As an example we will use the [car evaluation dataset](http://archive.ics.uci.edu/ml/datasets/Car+Evaluation) from [UCI Machine Learning repository](http://archive.ics.uci.edu/ml/). It contains 1728 samples with six atttributes (features) each. The class label is the evaluation of the car: $\{unacc, acc, good, vgood\}$.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+All six parameters are categorical and the data contains exactly one sample for each possible combination of attributes values (in this respect this is quite peculiar dataset).
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As before we will use pandas to read and proccess the data.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+cars_data = pd.read_csv("../../Data/Cars/car_data.csv", names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'class'])
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+cars_data.head()
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+cars_data.info()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Method `groupby`  divides the data frame into goups based on the value of the given colum(s)
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+cars_by_class = cars_data.groupby('class')
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The size of each group can be calculated using method `size`
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+cars_by_class.size()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As we can see the classes are not very well ballanced with relatively small number of cars in two best  classes.  So I have decided to join those two classes together introducing a new classification
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+def bargain(c):
+    if c in ['good', 'vgood']:
+        return 'good'
+    elif c=='acc':
+        return 'fair'
+    else:
+        return 'bad'
+```
+
+```{python slideshow={'slide_type': '-'}}
+cars_data['bargain'] = cars_data['class'].apply(bargain)
+cars_data = cars_data.drop('class',axis=1)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We start by dividing the data set into training and testing. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+from sklearn.model_selection import train_test_split
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+seed = 678565
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+cars_train, cars_test = train_test_split(cars_data, train_size=0.75, random_state=seed)
+```
+
+```{python slideshow={'slide_type': '-'}}
+cars_train['bargain'].value_counts()
+```
+
+```{python slideshow={'slide_type': '-'}}
+cars_test['bargain'].value_counts()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Function `train_test_split` has an option to _stratify_ data based on the values of one colum
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+cars_train, cars_test = train_test_split(cars_data, train_size=0.75, stratify=cars_data['bargain'],
+                                         random_state = seed)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+In this way the split was done separately for each  class label. That way we obtain as a result slightly more balanced sets
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': '-'}}
+cars_train['bargain'].value_counts()
+```
+
+```{python slideshow={'slide_type': '-'}}
+cars_test['bargain'].value_counts()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We will use the Naive Bayes.
+There are many ways that we can calculate the estimators. We can start by grouping the dataframe according to  feature values
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+cars_training_grouped = cars_train.groupby(['bargain', 
+                                            'buying',
+                                            'maint',
+                                            'doors', 
+                                            'persons', 
+                                            'lug_boot',
+                                            'safety'])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and count the size of each group
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+group_counts=cars_training_grouped.size()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The `sum` method can make a partial sums (see Titanic problem) which we can use to extract $n^{c}_{ij}$ values
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+# The level argument list the levels not summed over i.e. left in the result.
+group_counts.groupby(level = ['bargain', 'buying'] ).sum()
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and finally calculate the probabilities
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+(group_counts.groupby(level = ['bargain', 'buying'] ).sum() +1 )/(group_counts.groupby(level='bargain').sum()+4)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Scikit-learn
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+However if you look closely you will notice one problem: the 'good' class does not contain any values for 'high' and 'vhigh'  attribute values! That means of course that they are zero, but it complicates the calculations. Instead of fixing this by hand we will use the tools from the [scikit-learn](https://scikit-learn.org/stable/index.html) library. This library has a class implementing just what we need
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+from sklearn.naive_bayes import CategoricalNB
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+cnb = CategoricalNB(alpha=1)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+However this classifier requires the  class labels and attributes to be  integer numbers counted from zero. Fortunatelly scikit-learn also includes a class for converting from labels to ordinals:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.preprocessing import  OrdinalEncoder
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+features_encoder = OrdinalEncoder(dtype='int32')
+train_encoded = features_encoder.fit_transform(cars_train)
+```
+
+```{python}
+np.bincount(train_encoded[:,-1])
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+cnb.fit(train_encoded[:,:-1], train_encoded[:,-1])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We can view the learned probabilities of this classifier  using its `feature_log_prob` attribute:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+np.exp( cnb.feature_log_prob_[0] )
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Comparing with our calculations we see a almost perfect agreement. Mowever we get all four probabilities in the last line like required. The two values are not zero because of smoothing. 
+<!-- #endregion -->
+
+```{python}
+from sklearn.metrics import accuracy_score
+accuracy_score(train_encoded[:,-1], cnb.predict(train_encoded[:,0:-1]), normalize=True)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+After training the classifier we can use it to  make predictions on the test set
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+test_encoded = features_encoder.transform(cars_test)
+encoded_test_class = test_encoded[:,-1]
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+predicted_test_class = cnb.predict(test_encoded[:,:-1])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and test them
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.metrics import accuracy_score
+```
+
+```{python}
+accuracy_score(encoded_test_class, predicted_test_class, normalize=True)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Actually the classifier has a method for predicting and measuring accuracy
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+cnb.score(test_encoded[:,:-1], encoded_test_class)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+which unsuprisingly gives same results
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As a last check I will look at the class distribution in the predicted and real labels. As it may happen that with unbalanced  classes  one class can be e.g. totaly misclassified without affecting accuracy. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+np.bincount(predicted_test_class.astype('int64'))
+```
+
+```{python slideshow={'slide_type': '-'}}
+np.bincount(encoded_test_class.astype('int64'))
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Multiclass metrics
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The accuracy  generalises intuitively to non-binary classification. Other metrics are defined only for binary classification problem as they rely on the confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
+<!-- #endregion -->
+
+```{python}
+from sklearn.metrics import multilabel_confusion_matrix
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+pred = predicted_test_class
+true = encoded_test_class
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+def stat(y_true, y_pred, c):
+    lbl_true = np.where(y_true==c,1,0)
+    lbl_pred = np.where(y_pred==c,1,0)
+    TP = np.sum(lbl_true * lbl_pred)
+    FP = np.sum( (1-lbl_true)*lbl_pred)
+    TN = np.sum((1-lbl_true) * (1-lbl_pred))
+    FN = np.sum(lbl_true * (1-lbl_pred))            
+    return TP, FP,FN, TN
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+for i in range(3):
+    print( stat(true,pred, i))
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Once we have the statistics for each binary classifier we can combine the together. We will consider _micro_ and _macro_ averaging. 
+<!-- #endregion -->
+
+```{python}
+mcf = multilabel_confusion_matrix(true, pred)
+print(mcf)
+```
+
+<!-- #region slideshow={"slide_type": "fragment", "slideshow": {"slide_type": "slide"}} -->
+<table style="font-size:1.5em;">
+<tr> <th>         </th> <th colspan=2>actual</th></tr>
+<tr> <th>predicted</th> <th>N  </th> <th>P  </th></tr>
+<tr> <th> N       </th> <td>TN </td> <td>FP </td></tr>
+<tr> <th> P       </th> <td>FN </td> <td>TP </td></tr>
+<tr> <th>total</th> <td> P</td> <td>N</td></tr>
+</table>
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Micro averaging
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In micro averaging we first calculate the summary values of TP, FP, TN and TN and use them to calculate the total score. 
+We will start with _recall_ which is just another name for true positives rate.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$Recall_\mu = \frac{\sum_i TP_i}{\sum_i(TP_i+FN_i)}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+num = 0
+den = 0
+for i in range(3):
+    ((tn, fp), (fn, tp)) =  mcf[i]
+    num += tp
+    den += tp+fn
+recall_mu = num/den    
+print(num, den, recall_mu   )
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$Precision_\mu = \frac{\sum_i TP_i}{\sum_i(TP_i+FP_i)}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+num = 0
+den = 0
+for i in range(3):
+    ((tn, fp), (fn, tp)) =  mcf[i]
+    num += tp
+    den += tp+fp
+precision_mu = num/den    
+print(num, den, precision_mu    )
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and $F_1$ is then  harmonic mean of the two
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$F_\mu = 2\cdot\frac{Precision_\mu\cdot Recall_\mu}{Precision_\mu + Recall_\mu}$$
+<!-- #endregion -->
+
+```{python}
+print(2*precision_mu*recall_mu/(precision_mu+recall_mu))
+```
+
+<!-- #region tags=["problem"] slideshow={"slide_type": "slide"} -->
+#### Problem
+<!-- #endregion -->
+
+<!-- #region tags=["problem"] slideshow={"slide_type": "-"} -->
+  Show that $Recall_\mu$ = $Precision_\mu = Accuracy$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+There is no surprise that scikit-learn library has functions to calculate those metrics
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.metrics import *
+```
+
+```{python slideshow={'slide_type': '-'}}
+print(
+    recall_score(encoded_test_class, predicted_test_class, average='micro'),
+    precision_score(encoded_test_class, predicted_test_class, average='micro'),
+    f1_score(encoded_test_class, predicted_test_class, average='micro'))
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Macro averaging
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+With macro averaging we  calculate  score for each binary classifier separately and average them. So for recall
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$Recall_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FN_i}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+tot = 0
+for i in range(3):
+    ((tn, fp), (fn, tp)) =  mcf[i]
+    tot +=tp/(tp+fn)
+rec = tot/3    
+print(rec)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+recall_score(encoded_test_class, predicted_test_class, average='macro')
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and for precision
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$Precision_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+tot = 0
+for i in range(3):
+    ((tn, fp), (fn, tp)) =  mcf[i]
+    tot +=tp/(tp+fp)
+prec =  tot/3   
+print(prec)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+precision_score(encoded_test_class, predicted_test_class, average='macro')
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and $F_1$ score is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$F_1 = \frac{1}{k}\sum_{i=0}^{k-1}\frac{2\cdot TP_i}{TP_i+FP_i +TP_i +FN_i}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+tot = 0
+for i in range(3):
+    ((tn, fp), (fn, tp)) =  mcf[i]
+    tot +=2 * tp/(tp+fp+tp+fn)
+f =  tot/3   
+print(f)
+```
+
+```{python}
+f1_score(encoded_test_class, predicted_test_class, average='macro')
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Weighted averaging 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+And finally the weighted averaging is like macro averaging but we  weight the average by the support of each class _i.e._ the number of labels of each class. E.g. for precision
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+tot = 0
+den = 0
+for i in range(3):
+    tp, fp, fn, tn =  stat(true,pred, i)
+    tot +=tp/(tp+fp) *(tp+fn)
+    den += (tp+fn)
+prec = tot/den
+print(prec)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+precision_score(encoded_test_class, predicted_test_class, average='weighted')
+```
+
+<!-- #region tags=["problem"] slideshow={"slide_type": "slide"} -->
+#### Problem 
+<!-- #endregion -->
+
+<!-- #region tags=["problem"] slideshow={"slide_type": "-"} -->
+ Show that weighted averaging for recall gives same result as micro averaging.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+As you may have guessed scikit-learn library has some convenient functions that calculate those metrics at once.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+from sklearn.metrics import precision_recall_fscore_support,  classification_report
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+precision_recall_fscore_support(encoded_test_class, predicted_test_class, beta = 2, average = 'macro')
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+print(classification_report(encoded_test_class, predicted_test_class))
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Confusion matrix 
+<!-- #endregion -->
+
+```{python tags=c()}
+from sklearn.metrics import confusion_matrix, plot_confusion_matrix , ConfusionMatrixDisplay
+```
+
+```{python tags=c(), slideshow={'slide_type': '-'}}
+cm = confusion_matrix(encoded_test_class, predicted_test_class)
+cm
+```
+
+```{python}
+cm_display = ConfusionMatrixDisplay(cm, display_labels=['bad', 'fair', 'good'])
+fig, ax = plt.subplots(figsize=(12,8))
+cm_display.plot(ax=ax);
+ax.set_xlabel('predicted ratings')
+ax.set_ylabel('true ratings');
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plot_confusion_matrix(cnb, test_encoded[:,:-1], encoded_test_class, display_labels=['bad', 'fair', 'true'], normalize='true');
+```
+
+```{python}
+
+```
