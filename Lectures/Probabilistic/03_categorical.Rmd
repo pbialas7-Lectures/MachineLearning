@@ -243,7 +243,7 @@ group_counts=cars_training_grouped.size()
 ```
 
 <!-- #region slideshow={"slide_type": "skip"} -->
-The `sum` method can make a partial sums (see Titanic problem) which we can use to extract $n^{c}_{ij}$ values
+The `sum` method can make a partial sums which we can use to extract $n^{c}_{ij}$ values
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'slide'}}
@@ -286,6 +286,10 @@ from sklearn.preprocessing import  OrdinalEncoder
 ```{python slideshow={'slide_type': 'fragment'}}
 features_encoder = OrdinalEncoder(dtype='int32')
 train_encoded = features_encoder.fit_transform(cars_train)
+```
+
+```{python}
+features_encoder.feature_names_in_
 ```
 
 ```{python}
@@ -366,13 +370,29 @@ np.bincount(encoded_test_class.astype('int64'))
 ## Multiclass metrics
 <!-- #endregion -->
 
+```{python}
+from sklearn.metrics import multilabel_confusion_matrix, confusion_matrix, ConfusionMatrixDisplay
+```
+
+### Confusion matrix
+
 <!-- #region slideshow={"slide_type": "notes"} -->
-The accuracy  generalises intuitively to non-binary classification. Other metrics are defined only for binary classification problem as they rely on the confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
+The accuracy  generalises intuitively to non-binary classification.  The confusion matrix also generalises to this case.  
 <!-- #endregion -->
 
-```{python}
-from sklearn.metrics import multilabel_confusion_matrix
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+confusion_matrix(true, pred)
 ```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true', display_labels=features_encoder.categories_[-1]);
+```
+
+### Averaging 
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Other metrics are defined only for binary classification problem as they rely on a 2x2 confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class   $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
+<!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}}
 pred = predicted_test_class
@@ -395,6 +415,10 @@ for i in range(3):
     print( stat(true,pred, i))
 ```
 
+```{python}
+
+```
+
 <!-- #region slideshow={"slide_type": "skip"} -->
 Once we have the statistics for each binary classifier we can combine the together. We will consider _micro_ and _macro_ averaging. 
 <!-- #endregion -->
@@ -406,11 +430,10 @@ print(mcf)
 
 <!-- #region slideshow={"slide_type": "fragment", "slideshow": {"slide_type": "slide"}} -->
 <table style="font-size:1.5em;">
-<tr> <th>         </th> <th colspan=2>actual</th></tr>
-<tr> <th>predicted</th> <th>N  </th> <th>P  </th></tr>
-<tr> <th> N       </th> <td>TN </td> <td>FP </td></tr>
-<tr> <th> P       </th> <td>FN </td> <td>TP </td></tr>
-<tr> <th>total</th> <td> P</td> <td>N</td></tr>
+<tr> <th>         </th> <th colspan=2>predicted</th></tr>
+    <tr> <th>actual</th> <th>N  </th> <th>P  </th> <th>total</th></tr>
+    <tr> <th> N       </th> <td>TN </td> <td>FP </td> <td>N</td></tr>
+    <tr> <th> P       </th> <td>FN </td> <td>TP </td> <td>P</td></tr>
 </table>
 <!-- #endregion -->
 
@@ -600,31 +623,6 @@ precision_recall_fscore_support(encoded_test_class, predicted_test_class, beta =
 
 ```{python slideshow={'slide_type': 'fragment'}, tags=c()}
 print(classification_report(encoded_test_class, predicted_test_class))
-```
-
-<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
-### Confusion matrix 
-<!-- #endregion -->
-
-```{python tags=c()}
-from sklearn.metrics import confusion_matrix, plot_confusion_matrix , ConfusionMatrixDisplay
-```
-
-```{python tags=c(), slideshow={'slide_type': '-'}}
-cm = confusion_matrix(encoded_test_class, predicted_test_class)
-cm
-```
-
-```{python}
-cm_display = ConfusionMatrixDisplay(cm, display_labels=['bad', 'fair', 'good'])
-fig, ax = plt.subplots(figsize=(12,8))
-cm_display.plot(ax=ax);
-ax.set_xlabel('predicted ratings')
-ax.set_ylabel('true ratings');
-```
-
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
-plot_confusion_matrix(cnb, test_encoded[:,:-1], encoded_test_class, display_labels=['bad', 'fair', 'true'], normalize='true');
 ```
 
 ```{python}

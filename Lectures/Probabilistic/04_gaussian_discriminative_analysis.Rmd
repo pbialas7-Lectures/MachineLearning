@@ -1,0 +1,852 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.13.8
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python slideshow={'slide_type': 'skip'}, tags=c("skip")}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+# Gaussian Discriminative Analysis
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In here we continue with the probabilistic methods of Machine Learning. Please recall that we are trying the estimate the conditional probability
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(X=x|Y=y)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+where $X$ represents our data or features and $Y$ is the  class label. Using Bayes theorem we can then infer the "inverted" conditional probability
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(Y=y|X=x)=
+\frac{P(X=x|Y=y)P(Y=y)}
+{\sum_y P(X=x|Y=y)P(Y=y)}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+This is the probability that examplar $x$  belongs to class $y$. This probability can be then used to construct a classifier by suitable thresholding. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+If $X$ is a categorical variable with finite support, we can list all the probabilities. In case of continous  features we have to bin the data or use some parametrized distribution. The most widely used distribution is of course the Normal (Gaussian) distribution. We have already used  it  in our "sex  from height and weight" example. So far we have only used the one dimensional distribution, fitting separately height and weight (or rather BMI). In this notebook we will try to estimate the joint height-weight conditional probability distribution directly. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We will start by loading the data (we will use the same [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height)) and converting it to metric units
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Height & weight dataset 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+import matplotlib.pyplot as plt
+import numpy as np
+import scipy.stats as st
+# %matplotlib inline
+plt.rcParams["figure.figsize"] = [12,8]
+import pandas as pd
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+data = pd.read_csv('../../Data/HeightWeight/weight-height.csv')
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+inch = 0.01 * 2.54 # m
+pound = 0.453 # kg
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+data['Height'] = data['Height'] *inch 
+data['Weight'] = data['Weight'] *pound
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As always we will split the data into training and testing sets
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+from sklearn.model_selection import  train_test_split
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+#by fixing the seed we guarantee that we can split the set in same way each time
+#this maybe handy for debuging purposes
+seed = 77678 
+train_data, test_data  = train_test_split(data,test_size=0.25, random_state=seed)
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+train_data_F = train_data[train_data.Gender=='Female']
+train_data_M = train_data[train_data.Gender=='Male']
+print("train ", len(train_data_F), len(train_data_M))
+test_data_F = test_data[test_data.Gender=='Female']
+test_data_M = test_data[test_data.Gender=='Male']
+print("test  ", len(test_data_F), len(test_data_M))
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We see that the classes (gender) are balanced  across the training and testig sets.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+# setting colors for consistency throughout the notebook you can subsitute here your favorite "gender colors" :) 
+f_color = 'blue'
+m_color ='orange'
+color = 'grey'
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The distribution for each gender looks as follows on scatter plot
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+plt.scatter(train_data_F.Height, train_data_F.Weight, alpha=0.2, c = f_color, label='Women');
+plt.scatter(train_data_M.Height, train_data_M.Weight, alpha=0.2, c = m_color, label='Men');
+plt.legend();
+plt.xlabel('Height')
+plt.ylabel('Weight');
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and on histograms
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+fig, ax = plt.subplots()
+ax.set_xlabel('Height [m]');
+ax.set_ylabel('Weight [kg]');
+hb = ax.hist2d(train_data['Height'], train_data['Weight'], bins=[100,80], density=True);
+fig.colorbar(hb[3], ax=ax);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Sometimes we can get a better looking picture with hexagonal bins:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+ax.set_xlabel('Height [m]')
+ax.set_ylabel('Weight [kg]')
+hb = ax.hexbin(train_data['Height'], train_data['Weight']);
+fig.colorbar(hb);
+ax.set_xlim(1.4,2.0);
+ax.set_ylim(35,120);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Because we will be using those plots often, for convenience I have wrapped them in few functions below
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c("fold")}
+def hw_plot(**kwargs):
+    fig, ax = plt.subplots()
+    ax.set_xlabel('Height [m]')
+    ax.set_ylabel('Weight [kg]')
+    return fig,ax
+
+def hw_scatter(fig,ax, F, M):
+    ax.scatter(F.Height, F.Weight, alpha=0.2, c = f_color, label='Women');
+    ax.scatter(M.Height, M.Weight, alpha=0.2, c = m_color, label='Men');
+    ax.legend();
+
+def hw_hist(fig, ax, df):
+    hb = ax.hist2d(train_data['Height'], train_data['Weight'], bins=[100,80], density=True);
+    fig.colorbar(hb[3], ax=ax);
+    return hb
+
+def hw_hexbin(fig, ax, df, **kwargs):
+    hb = ax.hexbin(df['Height'], df['Weight'], **kwargs);
+    fig.colorbar(hb);
+    return hb
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We would like to find the joint probability density function: 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$P(h,w|S=s)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+which we will assume is a _multivariate gaussian distribution_:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(\mathbf{x}|S=s)\sim \mathcal{N}(\mu_s,\Sigma_s)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The probability density function of this distribution in $D$ dimensions  is given by the formula:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\newcommand{\b}[1]{\mathbf{#1}}$$
+$$P(\mathbf{x}|\b\mu,\b\Sigma)=
+\frac{1}{(2\pi)^{D/2}|\mathbf\Sigma|^{1/2}}
+e^{\displaystyle-\frac{1}{2}\left(\mathbf{x}-\b\mu\right)^T\mathbf{\Sigma}^{-1}\left(\mathbf{x}-\b\mu\right)}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+$\mathbf{x}$ and $\mathbf{\mu}$ are $D$-dimensional vectors $\mathbf{\mu}$ being the mean or the center of the distribution. $\mathbf{\Sigma}$ is $D\times D$ dimensional symmetric _covariance_ matrix. $|\b\Sigma|$ denotes the _determinant_ of the matrix. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+#### Question How many parameters does the model have?
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=["answer"] -->
+$\mathbf{\mu}$ nas $D$ parameters and a symmetric matrix  has $(D^2-D)/2+D=D(D+1)/2$ parameters giving altogether $D(D+3)/2$ parameters.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### MLE estimate of multivariate gaussian parameters
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Let $\b X$  be $N\times D$ the measurement matrix. Each row is a $D$ dimensional vector of measurements $\b X_i$. Assumimg that all measurments come from the Multivariate  Gaussian distribution with parameters $\b\mu$ and  $\Sigma$ the likelihood is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\prod_{i=1}^N P(\b X_i|\b\mu,\b\Sigma)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and the log likelihood is: 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sum_{i=1}^N \log P(\b X_i|\b\mu,\b\Sigma) =  
+- N \frac{1}{2}\log |\Sigma| -\sum_{i=1}^N\frac{1}{2}\left(\mathbf{X_i}-\mu\right)^T\mathbf{\Sigma}^{-1}\left(\mathbf{X_i}-\mu\right) + const$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+the last term can be rewritten as
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\newcommand{\tr}{\operatorname{Tr}}$$
+$$
+\frac{1}{2}\sum_{i=1}^N\sum_{j,k=1}^D
+\left(X_{ik}-\mu_k\right)
+\left(X_{ij}-\mu_j\right)
+\left(\b{\Sigma}^{-1}\right)_{jk}
+=\frac{N}{2}\tr \b C \,\b\Sigma^{-1} 
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+where $\b C$ is $D \times D$  empirical covariance matrix
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$C_{kj}=\frac{1}{N}\sum_{i}\left(X_{ik}-\mu_k\right)\left(X_{ij}-\mu_j\right)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+$$\tr \b A\equiv \sum_{i=1}^{D} A_{ii}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+$\tr$ is the _trace_ operator (the sum of the elements on the diagonal):
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+To compute the MLE estimates we have to differentiate this expression with respect to $\b \mu$ and $\Sigma$. Let's start with $\b \mu$. The likelihood depends on $\mu$ only trough the matrix $\b C$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "subslide"} -->
+$$\frac{\partial}{\partial \mu_m}C_{jk}
+=\frac{1}{N}\sum_{i}\frac{\partial}{\partial \mu_m}\left(X_{ij}-\mu_j\right)\left(X_{ik}-\mu_k\right)
+=-\frac{1}{N}\sum_{i}\left(\delta_{m,j}\left(X_{ik}-\mu_k\right) + \delta_{m,k}\left(X_{ij}-\mu_j\right)\right)
+$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{\partial}{\partial \mu_m}C_{jk}=-\delta_{m,j}\left(\overline{ x}_{k}-\mu_k\right) - \delta_{m,k}\left(\overline{ x}_j-\mu_j\right)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{1}{2}\frac{\partial}{\partial \mu_m}\left(\tr \b C \,\b\Sigma^{-1}\right) = 
+\frac{1}{2}\left(\frac{\partial}{\partial \mu_m}\tr \b C\right) \,\b\Sigma^{-1} = 
+-\frac{1}{2}\sum_{jk}
+\left(
+\delta_{m,j}\left(\overline{ x}_{k}+\mu_k\right) - \delta_{m,k}\left(\overline{ x}_j-\mu_j\right))
+\right)
+\left(\b\Sigma^{-1}\right)_{kj}=-\sum_{k}\left(\b\Sigma^{-1}\right)_{mk}\left(\overline{ x}_{k}+\mu_k\right)
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+where we have used the fact that $\Sigma$ is a symmetric matrix. Or in vector notation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{1}{2}\frac{\partial}{\partial \b \mu}\tr \b C \,\b\Sigma^{-1} = -\b\Sigma^{-1}(\b x -\b \mu)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Assuming thar $\b\Sigma^{-1}$ is not singular, the solution to 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\b\Sigma^{-1}(\overline{\b x} -\b \mu)=0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+equation is unsurprisingly 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\b \mu = \overline{\b x}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The differentiation with respect to $\b\Sigma$ is more difficult and instead we will look for the inverse matrix $\b A= \b\Sigma^{-1}$.  Because the determinant of the inverse matrix is the inverse of the determinant the expression we have to minimize is  
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "subslide"} -->
+$$\frac{1}{2}\log |\b A|-\frac{1}{2}\tr \b C \,\b A$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Differentiating with respect to element $A_{kl}$ we obtain
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{1}{2}\frac{\partial}{\partial A_{kl}}\log |\b A|-\frac{1}{2}\frac{\partial}{\partial A_{kl}}\tr \b C \,\b A 
+=
+\frac{1}{2}\frac{\partial}{\partial A_{kl}}\log |\b A|-\frac{1}{2}C_{lk}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "subslide"} -->
+#### Problem 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+Show that 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$\frac{\partial}{\partial A_{kl}}\log |\b A|  = \left({\b A}^{-1}\right)_{lk}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+__Hint__ Use the Laplace expansion of the determinant. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "subslide"} -->
+Using the above expression we obtain finally the equation for MLE of $\b A$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$ \left({\b A}^{-1}\right)_{lk}\equiv \Sigma_{lk}=C_{lk}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+So the  again unsurprisingly the covariance matrix is approximated by its empirical value. This estimatiom runs into severe problems in higher dimension but for the moment we can use it "as is" for our classifier. Below are two helper functions to calculate those estimators and to construct a corresponing distribution object. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$\mu = \bar{\mathbf{x}}\qquad \Sigma_{lk}=C_{lk}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+def gaussian_stats(X):
+    mu = np.mean(X,0)
+    sigma = np.cov(X,rowvar=False)
+    return mu, sigma
+
+def mv_gaussian_mle_fit(X):
+    mu, sigma = gaussian_stats(X)
+    return st.multivariate_normal(mu, sigma)
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In two dimensions we can visualise the distribution by drawing the countour lines. For multivariate gaussian those are ellipses. I have included a function to plot 
+ellipses of given radius expressed in units of standard deviation $\sigma$. It is adapted from [Plot a confidence ellipse of a two-dimensional dataset](https://matplotlib.org/3.2.1/gallery/statistics/confidence_ellipse.html#sphx-glr-gallery-statistics-confidence-ellipse-py)  and described [here](https://carstenschelp.github.io/2018/09/14/Plot_Confidence_Ellipse_001.html). If you have cloned my repo you can use it by importing the `plotting` module from `mchlearn` package as follows:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+import sys
+sys.path.append("../../") #need to add main repo directory to the system path used for searching packages
+from mchlearn.plotting import confidence_ellipse
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+mu_F, cov_F = gaussian_stats(train_data_F[['Height', 'Weight']])
+mu_M, cov_M = gaussian_stats(train_data_M[['Height', 'Weight']])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+By default ellipsed are drawn with a three $\sigma$ radius
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+fig, ax = hw_plot()
+hw_scatter(fig, ax, train_data_F, train_data_M)
+confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
+confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color);
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Fitting the class priors
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Actually our model has some more parameters: those are the _a priori_ probabilities of each class. We can either set them "by hand" as we did before:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+p_F = 0.5
+p_M = 1- p_F
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Or we can fit them from the data using MLE using the joint probability distribution both on labels $y_i$ and features $\b X_i$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(\b X,\b y| \theta) = \prod_{i=1}^N  P(\b X_i|\b\mu_{y_i},\b\Sigma_{y_i})\pi_{y_i}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Here $\theta$ denotes all parameter of the model: $\mu$, $\Sigma$  and prior $\pi$ for each class.  The log likehood is 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sum_{i=1}^N \left(\log \pi_{y_i} +\log P(\b X_i|\b\mu_{y_i},\b\Sigma_{y_i}) \right) = 
+\sum_c N_c \log \pi_c +\sum_c \sum_{i:y_i=c}\log P(\b X_i|\b\mu_{y_i},\b\Sigma_{y_i}) $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+$N_c$ denotes the number of samples in each class. For the last term we proceed as before fitting $\b\mu$ and $\b\Sigma$ for each class. The priors require slightly more caution. We cannot just differentiate with respect to  priors $\pi_c$ because the priors are not independent as their sum must be equal one.  We will have to use the [Lagrange multipliers method](https://en.wikipedia.org/wiki/Lagrange_multiplier).  What we differentiate is the expression
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\sum_c N_c \log \pi_c+\lambda \sum_c \pi_c$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Differentiating with respect to $\pi_d$ leads to equation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\frac{N_c}{\pi_c}+\lambda =0\quad\text{or}\quad \pi_c = -\frac{N_c}{\lambda}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Adjustig $\lambda$ as to fulfill the constraint gives us the final answer
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\pi_c = \frac{N_c}{N}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Classification
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Once we have the distributions in each class and class priors  we can finally calculate the probability of a person being a woman by Bayes theorem:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(S=f|h,w) = \frac{P(h,w|S=f) P(S=f)}{P(h,w|S=f) P(S=f)+P(h,w|S=m) P(S=m)}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+dist_F = mv_gaussian_mle_fit(train_data_F[['Height', 'Weight']])
+dist_M = mv_gaussian_mle_fit(train_data_M[['Height', 'Weight']])
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+def prob_F_cond_HW(hw):
+    pf = dist_F.pdf(hw)*p_F
+    pm = dist_M.pdf(hw)*p_M
+    return pf/(pf+pm)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We then calculate all the usuall metrics
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+test_predicted_proba_gda = prob_F_cond_HW(test_data[['Height','Weight']])
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+from sklearn.metrics import roc_curve, roc_auc_score, confusion_matrix
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+pd.DataFrame(confusion_matrix(test_data.Gender=='Female', test_predicted_proba_gda>0.5, normalize='true'))
+```
+
+```{python slideshow={'slide_type': '-'}, tags=c("fold")}
+pd.DataFrame({0: ['TNR', 'FPR'], 1: ['FPR','TPR']})
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+from mchlearn.plotting import roc_plot
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+def add_roc_curve(fig, ax, y_true, y_score, name):
+    fprs, tprs, thds = roc_curve(y_true, y_score)
+    auc = roc_auc_score(y_true, y_score)
+    ax.plot(fprs, tprs, label="{:s}  {:5.3f}".format(name, auc));
+    return fprs, tprs, thds, auc
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+DataFrame is used only for "pretty printing". The true labels correspond to rows and predicted to columns. The normalisation set to  'true' mean that the numbers in each row add up to one. So the matrix above corresponds to
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = roc_plot()
+add_roc_curve(fig, ax, test_data.Gender=='Female', test_predicted_proba_gda, "GDA")
+ax.legend(title='AUC');
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+If you look back at our Naive Bayes Height-BMI classfier you can see that the performance is almost identical. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Decision boundaries
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+To get an insight into the working of this classifier we will look at the decisions boundaries: lines or surfaces separating the regions of $R^D$ corresponding to each class.  E.g. in our example this will be the line defined by equation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(F|h,w)=\frac{1}{2}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+from mchlearn.plotting import grid
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+hs = np.linspace(1.3, 2.1,100)
+ws = np.linspace(30,120, 100)
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+To visualize this boundary I will draw the countour line(s) of $P(F|h,w)$. This  is slightly technical  and I have provided `grid` function that generates the data
+suitable to be used directly in the matplotlib `contour`  and `contourf` functions.  Those functions can be found in the `plotting` module in the `mchlearn` package. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+fig, ax = hw_plot()
+hw_scatter(fig, ax, train_data_F, train_data_M)
+confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
+confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color)
+cs = ax.contour(*grid(hs,ws,prob_F_cond_HW), [0.25, 0.5, 0.75], colors=['coral','red', 'coral']);
+ax.clabel(cs);
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+I have included boundaries for three different thresholds. Here is the same picture but using the histogram instead of scatter plot
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = hw_plot()
+hw_hexbin(fig,ax, train_data)
+ax.set_xlim(1.4,2.0)
+confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
+confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color)
+cs = ax.contour(*grid(hs,ws,prob_F_cond_HW), [0.25, 0.5, 0.75], colors=['coral','red', 'coral']);
+ax.clabel(cs);
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Quadratic Discriminant Analysis
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+As you can see the decision boundary is not a straight line. Actually we can show that this is a quadratic curve. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+ A quadratic surface is a ensemble of all points $\b x$ such that
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$F(\b x) = 0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+and function $F$ is a polynomial of degree at most two in the coordinates of the vector $x$. In two dimension this can be an ellipse, a parabola, a hyperbola, two intersecting lines and parallel lines.  E.g. the ellipse is given by the equation:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$a x_1^2 +b x_2^2-c = 0,\qquad a,b,c > 0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+#### Problem 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+Give the equation for two intersecting lines and two parallel lines. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=["problem", "hint"] -->
+__Hint__ The line is defined by equation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} tags=["hint"] -->
+$$a x_1+ b x_2 -d =0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In general case of more then two classes  the decision boundary between classes is a piecewise quadratic surface. More specifically, a decision boundary between any two classes is a quadratic surface. That's why this method is called _Quadratic Discriminant Analysis_. 
+
+To show this let's write again the conditional class probability:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$P(Y=c|X=x)=\frac{P(X=x|Y=c)\pi_c}{\sum_c P(X=x|Y=c)\pi_c}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Assuming the usuall majority rule the classifier will return the class with the bigest probability. Because the denominator  does not depend on $c$ this is same as picking biggest of all $P(X=x|Y=c)\pi_c$. That is classifier picks class $c$ iff
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$ P(X=x|Y=c)\pi_c > P(X=x|Y=c')\pi_{c'}, \text{ for all } c'\neq c$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+This defines a region that is a intersection of $K-1$ regions defined by a single inequality  $P(X=x|Y=c)\pi_c > P(X=x|Y=c')\pi_{c'}$. The boundary of this region is defined by the equality
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$P(X=x|Y=c)\pi_c = P(X=x|Y=c')\pi_{c'}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Plugging in the multivariate gaussian distribution we obtain equation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$
+\frac{\pi_c}{(2\pi)^{D/2}|\b\Sigma_c|^{1/2}}
+e^{\displaystyle-\frac{1}{2}\left(\mathbf{x}-\b\mu_c\right)^T{\b\Sigma_c}^{-1}\left(\mathbf{x}-\b\mu_c\right)}
+=
+\frac{\pi_{c'}}{(2\pi)^{D/2}|\b\Sigma_{c'}|^{1/2}}
+e^{\displaystyle-\frac{1}{2}\left(\mathbf{x}-\b\mu_{c'}\right)^T{\b\Sigma_{c'}}^{-1}\left(\mathbf{x}-\b\mu_{c'}\right)}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Taking the logarithm of both sides and droping common terms we obtain
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$
+\log\pi_c-
+\frac{1}{2}\log|\b\Sigma_c|^{1/2}
+-\frac{1}{2}\left(\mathbf{x}-\b\mu_c\right)^T{\b\Sigma_c}^{-1}\left(\mathbf{x}-\b\mu_c\right)
+=
+\log\pi_{c'}-\frac{1}{2}\log |\b\Sigma_{c'}|^{1/2}
+-\frac{1}{2}\left(\mathbf{x}-\b\mu_{c'}\right)^T{\b\Sigma_{c'}}^{-1}\left(\mathbf{x}-\b\mu_{c'}\right)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Which is a quadratic equation in $\b x$.  So the final region is an intersection of regions with quadratic boundaries, so its boundary is piecewise quadratic. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Naive Bayes
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+In our case we had ample data to fit the distributions. Each distribution requires five parameters so we have ten parameters in  total but the training set contains few thousands examples. Moreover  the classes are balanced. However the number of parameters grows quadratically with the number of dimensions. One (brutal) way of  reducing the number of parameters is to consider only the _diagonal_ $\b\Sigma$ matrices. This mean that we treat all features as conditionally independent so this is just Naive Bayes we have already considered.  We will redo this example here but this time  with  height and weight.  Those variables  are evidently correlated, this will enable us to see more clearly what kind of approximations we are making. We will also use the functions supplied in the scikit-learn library instead of constructing the classifier "by hand".
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} -->
+$$\Sigma_c = \begin{pmatrix}
+\sigma_{c0}^2 & 0&\ldots  & 0 & 0\\
+0  & \sigma_{c1}^2&\ldots  & 0 & 0\\
+\vdots & \vdots & \ddots & \vdots & \vdots\\
+0& 0 & \ldots &  \sigma^2_{c(n-2)} & 0\\
+0& 0 & \ldots &  0 & \sigma^2_{c(n-1)}
+\end{pmatrix}
+$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+from sklearn.naive_bayes import GaussianNB
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+nb_cls = GaussianNB()
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+nb_cls.fit(train_data[['Height', 'Weight']], train_data.Gender=='Female')
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+# The standard classifiers in sklearn return probabilities for all the classes. 
+# In case of binary classifier we need only one. 
+test_predicted_proba_nb = nb_cls.predict_proba(test_data[['Height', 'Weight']])[:,1] 
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+pd.DataFrame(confusion_matrix(test_data.Gender=='Female', test_predicted_proba_nb>0.5, normalize='true')) 
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+fig, ax = roc_plot()
+add_roc_curve(fig,ax, test_data.Gender=='Female', test_predicted_proba_gda, "QDA")
+add_roc_curve(fig,ax, test_data.Gender=='Female', test_predicted_proba_nb, "NB")
+ax.legend(title='AUC');
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The performance  of this classifer is not that much worse! Let's look at the fitted distributions and the decision boundary
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = hw_plot()
+hw_scatter(fig,ax,train_data_F, train_data_M)
+confidence_ellipse(nb_cls.theta_[1], np.diag(nb_cls.var_[1]), ax, edgecolor = f_color)
+confidence_ellipse(nb_cls.theta_[0], np.diag(nb_cls.var_[0]), ax, edgecolor = m_color)
+cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
+ax.clabel(cs_qda,[0.5], fmt="QDA");
+cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
+ax.clabel(cs_nb,[0.5], fmt="NB");
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+We can see that the distributions are wide off the mark. Naive Bayes has constrained them to be ellipses parallel to the axes.  The decision boundary is also different, but it manages to separate clearly the centers of the clusters from each other. And that's where most of the samples are. This can be better seen on the histogram
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+hw_hexbin(fig,ax, train_data, extent=(1.3,2.1,30, 120))
+confidence_ellipse(nb_cls.theta_[1], np.diag(nb_cls.var_[1]), ax, edgecolor = f_color)
+confidence_ellipse(nb_cls.theta_[0], np.diag(nb_cls.var_[0]), ax, edgecolor = m_color)
+cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
+ax.clabel(cs_qda,[0.5], fmt="QDA");
+cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
+ax.clabel(cs_nb,[0.5], fmt="NB");
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The violet line also clearly separates the two peaks which explains not so bad performance of the classifier. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Linear Discriminative Analysis
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+Another way of reducing the number of parameters is to fit  only one common $\b\Sigma$ matrix. That's we assume that all the classes have similar "shape" and differ only by the localisation of centers. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\Sigma_c = \Sigma,\quad c=0,\ldots,n-1$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+#### Problem
+<!-- #endregion -->
+
+ Show that in this case decisions boundaries are straight lines. 
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Because of this property This approach is called _Linear Discriminative Analysis_ and you have already encountered it on previous lectures. 
+Let's try it out on our dataset. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.discriminant_analysis import LinearDiscriminantAnalysis
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+lda_cls = LinearDiscriminantAnalysis(store_covariance=True) # we will need the covariance matrix later for illustrative purposes. 
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+lda_cls.fit(train_data[['Height', 'Weight']], train_data.Gender=='Female')
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+test_predicted_proba_lda = lda_cls.predict_proba(test_data[['Height', 'Weight']])[:,1]
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+pd.DataFrame(confusion_matrix(test_data.Gender=='Female', test_predicted_proba_lda>0.5, normalize='true'))
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = roc_plot()
+add_roc_curve(fig,ax, test_data.Gender=='Female', test_predicted_proba_gda, "QDA")
+add_roc_curve(fig,ax, test_data.Gender=='Female', test_predicted_proba_nb, "NB")
+add_roc_curve(fig,ax, test_data.Gender=='Female', test_predicted_proba_lda, "LDA")
+ax.legend(title='AUC');
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+The performance of this classifier is undistinguishable from performance of the Quadratic Discriminator.  This is because the two distributions have roughly same shape so the approximation is valid.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = hw_plot()
+hw_scatter(fig,ax, train_data_F, train_data_M)
+confidence_ellipse(nb_cls.theta_[1], lda_cls.covariance_, ax, edgecolor = f_color)
+confidence_ellipse(nb_cls.theta_[0], lda_cls.covariance_, ax, edgecolor = m_color)
+cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
+ax.clabel(cs_qda,[0.5], fmt="QDA");
+cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
+ax.clabel(cs_nb,[0.5], fmt="NB");
+cs_lda = ax.contour(*grid(hs,ws,lambda a: lda_cls.predict_proba(a)[:,1]), [0.5], colors=['green']);
+ax.clabel(cs_lda,[0.5], fmt="LDA");
+```
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+As you can see the LDA decision boundary (that indeed is a straight line) is very close to quadratic boundary in the region of interest.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots()
+hw_hexbin(fig, ax, train_data, extent=(1.3, 2.1, 30, 120))
+confidence_ellipse(nb_cls.theta_[1], lda_cls.covariance_, ax, edgecolor = f_color)
+confidence_ellipse(nb_cls.theta_[0], lda_cls.covariance_, ax, edgecolor = m_color)
+cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
+ax.clabel(cs_qda,[0.5], fmt="QDA");
+cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
+ax.clabel(cs_nb,[0.5], fmt="NB");
+cs_lda = ax.contour(*grid(hs,ws,lambda a: lda_cls.predict_proba(a)[:,1]), [0.5], colors=['green']);
+ax.clabel(cs_lda,[0.5], fmt="LDA");
+```
+
+```{python}
+
+```
