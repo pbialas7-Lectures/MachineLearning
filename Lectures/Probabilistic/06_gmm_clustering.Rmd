@@ -1,0 +1,296 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.13.8
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+#  Unsupervised learning
+<!-- #endregion -->
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+import numpy as np
+import scipy.stats as st
+import matplotlib.pyplot as plt
+# %matplotlib inline
+plt.rcParams["figure.figsize"] = [12,8]
+plt.rcParams["animation.html"] = "jshtml"
+```
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+import sys
+sys.path.append('../..')
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+In the gaussian mixture models - EM notebook we have used the mixture models for _density estimation_ e.g. modeling the  distribution of features in each class. Another common application is _clustering_. Technically this looks the same as fitting the GMM to a single class. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's assume we have $K$ components
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$\newcommand{\b}[1]{\mathbf{#1}}$
+$$p(\b x|\b \theta) = \sum_{k=1}^K\pi_k p_\mathcal{N}(\b x|\b\mu_k,\b\Sigma_k)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Generalizing the two component example from GMM-EM lecture we can introduce the latent variables $\b z\in \{0,1\}^K$ i.e. each $\b z$ is a vector of length $K$ with all entries set to zero except entry $k$ set to one which indicates that this point belongs to $k$-th  component. This is called $1-K$ encoding. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$z_i = \{0,\ldots,1,\ldots,0\}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The joint distribution in $\b x$ and $\b z$ is given by
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$p(\b x, \b z|\b \theta) = \sum_{k=1}^K\pi_k z_k p_\mathcal{N}(\b x|\b\mu_k,\b\Sigma_k)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Please note that only one term in the sum on the right hand side is non-zero. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+From Bayes theorem the probability that point $\b x$ belongs to cluster $k$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$
+\gamma_k(\b x)\equiv p(z_k=1|\b x, \theta)=
+\frac{ \pi_k p_\mathcal{N}(\b x|\b\mu_k,\b\Sigma_k)}
+{\sum_{k=1}^K\pi_k  p_\mathcal{N}(\b x|\b\mu_k,\b\Sigma_k)}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+$\gamma_k(\b x)$ is called _responsibility_ of $\b x$ for cluster $k$ and as a probability can take value from zero to one. This is called _soft clustering_. Of course we can use this number to define a _hard clustering_ by _e.g._ assigning points to the cluster with  highest responsibility. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+###  Sex from heigh and weight
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's apply this to  the sex from height&weight example.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+from mchlearn.datasets import load_height_weight
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+hw_data = load_height_weight('../../Data/HeightWeight/weight-height.csv')
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+from sklearn.model_selection import train_test_split
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+hw_train, hw_test = train_test_split(hw_data, test_size=0.2)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+from sklearn.mixture import GaussianMixture
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+hw_gm = GaussianMixture(n_components=2, tol=1e-5, n_init=3)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+hw_gm.fit(hw_train[['Height','Weight']])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's look at the found clusters 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from mchlearn.plotting import confidence_ellipse
+plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2, color='grey');
+colors=['red', 'blue']
+for i in range(2):
+    confidence_ellipse(hw_gm.means_[i], hw_gm.covariances_[i], ax = plt.gca(), edgecolor=colors[i], label =f"{hw_gm.weights_[i]:5.3f}");
+    plt.scatter(*np.split(hw_gm.means_,2,1), facecolors=colors)
+plt.legend(title='$\pi_k$');    
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Looks very reasonable :) 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Please recall that the because of the unidentifiability  of the parameters the particular assignment of labels to clusters is meaningless. That's a knowledge that we have to put in "by hand". Below I choose the women cluster as the one with smaller average height. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+female = np.argmin(hw_gm.means_[:,0])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's compare the results to the separate fit to each cluster _i.e._ quadratic discriminant analysis
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+qda = QuadraticDiscriminantAnalysis(store_covariance=True)
+qda.fit(hw_train[['Height','Weight']], hw_train.Gender=='Female')
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+from mchlearn.plotting import confidence_ellipse
+plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2, color='grey');
+qda_colors = [colors[1-female],colors[female]]
+for i in range(2):
+    confidence_ellipse(hw_gm.means_[i], hw_gm.covariances_[i], ax = plt.gca(), edgecolor=colors[i], label =f"{hw_gm.weights_[i]:5.3f}");
+    plt.scatter(*np.split(hw_gm.means_,2,1), facecolors=colors)
+    confidence_ellipse(qda.means_[i], qda.covariance_[i], ax = plt.gca(), edgecolor=qda_colors[i], label =f"{qda.priors_[i]:5.3f} QDA", linestyle='--');
+    plt.scatter(*np.split(qda.means_,2,1), edgecolors=qda_colors, facecolors='none')
+plt.legend(title='$\pi_k$');    
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As we can see the results are very similar. We can use those (EM fitted) cluster for classification
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.metrics import confusion_matrix
+test_proba = hw_gm.predict_proba(hw_test[['Height','Weight']])
+confusion_matrix(hw_test.Gender=='Female', test_proba[:,female]>0.5, normalize='true')
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+from mchlearn.plotting import roc_plot, add_roc_curve
+fig, ax = roc_plot()
+add_roc_curve(hw_test.Gender=='Female', test_proba[:,female], name='unsupervised', ax =ax);
+ax.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As you can see we are getting results similar to supervised learning. However in this analysis we have overlooked some very important issues.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Choosing  the number of components
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+While technically the procedure of fitting is similar to supervised learning with gaussian mixture discriminative analysis (GMDA) the crucial difference lies in the interpretation. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+In GMDA the clusters are only a mean to better approximation of the class probability densities and their interpretation is irrelevant for the functioning of the classifier. We can choose the number of clusters that gives best classification results, because we have clear metrics to measure the performance.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+In clustering we usually want to discover the structure of data and assign some interpretation to discovered clusters. But the  number of clusters is an input parameter. In the height-weight examples we knew that  this was two so the results were good. And we have used the real labels to check that. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+But this is not a case in general. We could experiment with different number of clusters but we need the criteria for evaluating the quality of clustering in absence of real labels.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+### Negative Log Likelihood
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+As what we are doing is to find the distribution that  fits the data bests, we could use the log likelihood (LL) as the measure of the performance. And that's what EM lagorithm does: it tries to maximize the likelihood. It is customary to use instead the _negative log likelihood_  (NNL) which contrary to the name is positive :) The smaller NNL the better. For calculating the log likehood we can use the `score` method that returns the average LL:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+-hw_gm.score(hw_train[['Height', 'Weight']])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+However we have already used the LL to fit on the same data. I hope that by now you know that you cannot do that and that this estimate is biased. We can try it on the test set:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+-hw_gm.score(hw_test[['Height', 'Weight']])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and indeed we get a bigger, hence worse value. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Let's compare this to fit with three clusters
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+hw_gm3 = GaussianMixture(n_components=3, tol=1e-5, n_init=3)
+```
+
+```{python slideshow={'slide_type': '-'}}
+hw_gm3.fit(hw_train[['Height', 'Weight']])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Looking at the fitted clusters
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+from mchlearn.plotting import confidence_ellipse
+plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2);
+cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+for i in range(3):
+    confidence_ellipse(hw_gm3.means_[i], hw_gm3.covariances_[i], ax = plt.gca(), edgecolor=cycle[i], label =f"{hw_gm3.weights_[i]:5.3f}");
+plt.legend(title='$\pi_k$');    
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+we see that there is not a clear interpretation to be given to different clusters and that their weights are similar. Let's see how good is the fit
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+print(f"2 clusters {-hw_gm.score(hw_test[['Height', 'Weight']]):6.4f}  3 clusters {-hw_gm3.score(hw_test[['Height', 'Weight']]):6.4f}")
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We see that it is only marginally different then in case of two clusters. 
+<!-- #endregion -->
+
+## Cross validation
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Actually we  should also not use the test set for choosing the number of components.  We should use a separate validation set. If we  do not have enough data we can recourse to cross valdation
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+from sklearn.model_selection import cross_validate
+cv2 = cross_validate(hw_gm, hw_train[['Height', 'Weight']])
+print(cv2)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+cv3 = cross_validate(hw_gm3, hw_train[['Height', 'Weight']])
+print(cv3)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+print(f"2 clusters {-cv2['test_score'].mean():6.4f}  3 clusters {-cv3['test_score'].mean():6.4f}")
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We see that the results are almost indistinguishable. But note that their are also different from the values obtained on the test set. That's because all of those are  statistical estimators so actually they are random variables themself :( The  estimate of variance of those estimators  is  difficult  and beyond the subject of this lecture. Interested readers may consult [No Unbiased Estimator of the Variance of K-Fold Cross-Validation](http://www.jmlr.org/papers/volume5/grandvalet04a/grandvalet04a.pdf).
+<!-- #endregion -->

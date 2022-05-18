@@ -1,0 +1,1043 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.13.8
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+import numpy as np
+import scipy.stats as st
+import matplotlib.pyplot as plt
+# %matplotlib inline
+plt.rcParams["figure.figsize"] = [12,8]
+plt.rcParams["animation.html"] = "jshtml"
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+import sys
+sys.path.append('../..')
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+# Mixture models
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The  quadratic discriminant analysis made rather strong assumptions that that distributions of features in each class was multivariate normal. Obviously often this assumptions does not hold.  Consider the following synthetic dataset:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+half_circles = np.loadtxt('half_circles.txt')
+hc_labels = half_circles[:,2].astype('int32')
+hc_data = half_circles[:,:2]
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+colors = np.asarray(['blue', 'red'])
+plt.scatter(half_circles[:,0], half_circles[:,1], s=30, alpha =0.5, 
+            c=colors[half_circles[:,2].astype('int32')]);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Clearly the distributions are not normal, the clusters are intertwined and althought they look well separated  we can expect the quadratic discriminant analysis to perform poorly on this data set. Let's  check it out
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+from sklearn.model_selection import train_test_split
+hc_train,hc_test, hc_lbl_train, hc_lbl_test = train_test_split(hc_data, hc_labels, test_size=0.25)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
+hc_qda = QuadraticDiscriminantAnalysis(store_covariance=True)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+hc_qda.fit(hc_train, hc_lbl_train)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+qda_proba = hc_qda.predict_proba(hc_test)[:,1]
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+from sklearn.metrics import confusion_matrix, roc_curve, roc_auc_score, f1_score, classification_report
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+confusion_matrix(hc_lbl_test, qda_proba>0.5, normalize='true')
+```
+
+```{python tags=c(), slideshow={'slide_type': 'slide'}}
+from mchlearn.plotting import roc_plot, add_roc_curve
+fig, ax = roc_plot()
+add_roc_curve(hc_lbl_test, qda_proba, 'qda', ax);
+ax.legend(title='AUC');
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+So while not totally useless the classifiers performance is not  exactly stellar. It's easy to understand why, when we look at confidence ellipses of fitted distributions and  resulting decision boundaries
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+from mchlearn.plotting import confidence_ellipse, decision_plot
+```
+
+```{python}
+blue_red = np.asarray([[0., 0.,1.],[1.,0.,0.]]) 
+decision_plot(half_circles[:,:2], half_circles[:,2].astype('int32'), blue_red, np.linspace(-3.,3.3,200), np.linspace(-1.5,1.5,200),hc_qda.predict_proba, np.argmax  )
+confidence_ellipse(hc_qda.means_[0], hc_qda.covariance_[0], ax = plt.gca(), edgecolor='blue')
+confidence_ellipse(hc_qda.means_[1], hc_qda.covariance_[1], ax = plt.gca(), edgecolor='red');
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The QDA classifier, constrained to quadratic curve, cannot reproduce the complex boundary between clusters.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+## Mixture of Gaussians
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+A simple generalisation of normal distribution is a _mixture of gaussians_ distribution which is a special case of _mixture model_. As the name implies those distribution consists of a _mixture_ of normal distributions. The resulting probability density function (pdf) is a  weighted sum of the pdfs of each mixture component. Modeling each class with the mixture of gaussians leads to so called _gaussian mixture discriminant analysis_. 
+
+I will ilustrate the idea of mixture model on a simple mixture of two  univariate (one dimensional) gaussian distribution.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### One dimension
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The pdf for a mixture of two  normal distributions is given by the formula 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\newcommand{\nc}{\mathcal{N}}$$
+$$p(x|\pi, \mu_0,\sigma_0, \mu_1, \sigma_1)=\pi \cdot p_\nc(x|\mu_1,\sigma_1) +  (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0) $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+where $p_\nc(x|\mu,\sigma)$ denotes the pdf of normal distribution with mean $\mu$ and standard deviation $\sigma$.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+mus  = np.asarray([0,1.5])
+stds = np.asarray([1,.5]) 
+gstat = np.asarray([mus, stds]).T 
+pi = 0.3
+#g = np.asarray([st.norm(*gstat[0]),st.norm(*gstat[1])])
+g = st.norm(loc=mus, scale=stds)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+def p_mix(x):
+    pdf = g.pdf(np.atleast_1d(x).reshape(-1,1))
+    return (1-pi)*pdf[:,0]+pi*pdf[:,1]
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+xs = np.linspace(-5,5,500)
+pdf = g.pdf(xs.reshape(-1,1))
+plt.plot(xs, (1-pi)*pdf[:,0]+pi*pdf[:,1],label = '$\pi \cdot  p(x|\mu_1,\sigma_1) +  (1-\pi) \cdot p(x|\mu_0,\sigma_0)$')
+plt.plot(xs, (1-pi)*pdf[:,0], label = '$(1-\pi) \cdot  p(x|\mu_0,\sigma_0)$');
+plt.plot(xs, pi*pdf[:,1], label = '$\pi \cdot  p(x|\mu_1,\sigma_1)$');
+plt.legend(loc = 2);
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Sampling from a mixture distribution
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+When sampling a mixture distribution we  do it in two steps: First we  select the component using the Bernoulli distribution (multinoulli in general when number of components is greater then two)
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+np.random.seed(12312)
+z  = st.bernoulli(p=pi)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+zs = z.rvs(20000)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+and then we draw a sample from this component distribution
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+data = st.norm.rvs(gstat[zs][:,0], gstat[zs][:,1])
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+This is called _ancestral sampling_. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plt.hist(data, bins=64, density=True);
+plt.plot(xs, p_mix(xs));
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Log likelihood
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+We will try to fit this distribution to data using MLE. Given the data $\mathbf x$ the likelihood is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\newcommand{\b}[1]{\mathbf{#1}}$$
+$$p(\b x|\pi, \mu_0,\sigma_0, \mu_1, \sigma_1) = \prod_{i=1}^N p(x_i|\pi, \mu_0\sigma_0, \mu_1, \sigma_1)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\log p(\b x|p, \mu_0,\sigma_0, \mu_1, \sigma_1) = \sum_{i=1}^N \log\left(
+\pi \cdot p_\nc(x_i|\mu_1,\sigma_1) +  (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0)
+\right)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+This is similar to what we have encountered when fitting the quadratic discriminant model but with one crucial difference. Because we do not know which points belong to which cluster, the argument to the logarithm is a sum. As we cannot apply the logarithm separately to each term we end up with much more complicated expression. What's worse the resulting function is _not concave_ as a function of parameters $\pi, \mu_0,\sigma_0, \mu_1$ and $\sigma_1$. That makes  finding the maximum estimate (MLE) much more difficult. We can of course use some universal maximum finding algorith like stochastic gradient descent but we have to ascertain that e.g. paramter $\pi$ is  contained in the interval $[0,1)$. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Fortunatelly there exists an algorithm  that is aplicable to exactly such problems involving hidden variables, which I will describe below.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Latent variables
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Let's suppose we know to which component each data point belongs. We can encode this information into a variable $z$ that takes values $0$  and $1$. Then the _joint_ distribution of variables $x$ nad $z$ is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$
+P(x,z|\pi,\mu_0,\sigma_0, \mu_1, \sigma_1) = 
+z \cdot \pi \cdot p_\nc(x|\mu_1,\sigma_1)+  (1-z)\cdot(1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0)
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$
+\displaystyle\sum_{z=0}^1 P(x,z|\pi,\mu_0,\sigma_0, \mu_1, \sigma_1) = 
+\pi \cdot p_\nc(x|\mu_1,\sigma_1)+(1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0) = P(x|\pi,\mu_0,\sigma_0, \mu_1, \sigma_1)
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The log likelihood is 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\log p(\b x|p, \mu_0,\sigma_0, \mu_1, \sigma_1) = \sum_{i=1}^N \log\left(
+z\cdot \pi \cdot p_\nc(x_i|\mu_1,\sigma_1) + (1-z)\cdot (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0)
+\right)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Because only one term under the  logarithm can be non-zero we can change the logarithm of sum into the sum of logarithms: 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\log\left(
+z\cdot \pi \cdot p_\nc(x_i|\mu_1,\sigma_1) + (1-z)\cdot (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0)
+\right) = 
+z \log\left(
+\cdot \pi \cdot p_\nc(x_i|\mu_1,\sigma_1)\right) + (1-z)\log\left(\cdot (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0)
+\right)
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+so the final expression for log-likelihood is
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$
+\log P(\b x,\b z|\pi,\mu_0,\sigma_0, \mu_1, \sigma_1) = \sum_{i=1}^N \left[ z_i \log\left(
+\pi \cdot p_\nc(x_i|\mu_1,\sigma_1)\right)+ (1-z_i)\log \left((1-p) \cdot p_\nc(x_i|\mu_0,\sigma_0)
+\right)\right].
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The variables $z$ are called _latent_ or _unobserved_ variables. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+## Expectation - Maximization algorithm
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The _marginal_ distribution of $z$ is 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$P(z =1)=\int_x P(x,z=1|\pi,\mu_0,\sigma_0, \mu_1, \sigma_1) =
+\pi \cdot  \int_x p_\nc(x|\mu_1,\sigma_1)=\pi
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+We define conditional probability of $z$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\gamma_\theta(x)\equiv P(z =1|x,\theta),\quad \theta = \{\pi, \mu_0,\sigma_0, \mu_1, \sigma_1\}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+where $\theta$ denotes all the parameters $\pi, \mu_0,\sigma_0, \mu_1, \sigma_1$. This is the probability that given $\theta$ the point $x$ belongs to first cluster.  
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+It can be easilly calculated  using Bayes theorem
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$P(z =1|x,\theta) = 
+\frac{p(x|z=1,\theta)P(z=1)}
+{p(x|z=0, \theta)P(z=0)+p(x|z=1,\theta)P(z=1)}
+=
+\frac{\pi p_\nc(x_i|\mu_1,\sigma_1)}{\pi p_\nc(x_i|\mu_1, \sigma_1)+ (1-\pi) p_\nc(x_i|\mu_0,\sigma_0)}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Given $\gamma_\theta(x)$ we can calculate the __expected__ log likehood 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Expectation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$Q(\theta', \theta) \equiv E_{P(z|x, \theta)}\left[\log P(x, z|\theta')\right]\equiv \sum_i \left[\gamma_\theta(x_i) \log P( x_i, z_i=1|\theta')+(1-\gamma_\theta(x_i))\log P( x_i, z_i=0|\theta^')\right]$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Please note that the expectation value was calculated  using the probability distribution for $\b z$ with parameters $\theta$. However in the  joint probability distribution being averaged $P(\b x, z|\theta)$ we have assumed a different set of parameters $\b \theta^\prime$. The final expression is 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\sum_{i=1}^N \left[\gamma_\theta(x_i)\log p_\nc(x_i|\mu'_1,\sigma'_1)+  (1-\gamma_\theta(x_i))\log  p_\nc(x_i|\mu'_0,\sigma'_0)\right]
++
+\sum_{i=1}^N \left[\gamma_\theta(x_i)\log \pi' +(1-\gamma_\theta(x_i))\log (1-\pi') \right]
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Now we can calculate the parameters $\hat\theta$ that __maximize__ this expectation value
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Maximization
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\newcommand{\argmax}{\operatorname{argmax}}$$
+$$\hat\theta = \argmax_{\theta'}Q(\theta', \theta)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Let's calculate the $\hat\pi$. Differentiating the likelihood with respect to $\pi'$ we obtain the equation for $\hat\pi$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\frac{1}{\hat\pi} \sum_{i=1}^N\gamma_\theta(x_i)-\frac{1}{1-\hat\pi}\sum_{i=1}^N(1-\gamma_\theta(x_i))=0$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+with solution
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\hat\pi = \frac{1}{N}\sum_{i=1}^N\gamma_\theta(x_i)$$
+<!-- #endregion -->
+
+For $\hat\mu_1$ we have to differentiate 
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+$$\sum_{i=1}^N \gamma_\theta(x_i)\log p_\nc(x_i|\mu'_1,\sigma'_1) = 
+-\log\sigma'_1 \sum_{i=1}^N \gamma_\theta(x_i) 
+-\sum_{i=1}^N \gamma_\theta(x_i)\frac{1}{2\sigma_1^2}(x_i-\mu'_1)^2$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+with respect to $\mu'_1$ and we obtain equation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\frac{1}{\sigma^2}\sum_{i=1}^N \gamma_\theta(x_i)(x_i-\hat\mu_1) = 0 $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+which is equivalent to
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\sum_{i=1}^N \gamma_\theta(x_i) x_i = \hat\mu_1\sum_{i=1}^N \gamma_\theta(x_i) $$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+leading to 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\hat\mu_1 = \frac{\sum_{i=1}^N \gamma_\theta(x_i) x_i}{\sum_{i=1}^N \gamma_\theta(x_i)}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The rest of the parameters is calculated in the same way giving finally:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+$$
+\hat\mu_0 = \frac{\sum_{i=1}^N  (1- \gamma_\theta(x_i)) x_i}{\sum_{i=1}^N  (1-\gamma_\theta(x_i))}
+\qquad
+\hat\mu_1 = \frac{\sum_{i=1}^N \gamma_\theta(x_i) x_i}{\sum_{i=1}^N \gamma_\theta(x_i)}
+$$
+<!-- #endregion -->
+
+$$
+\hat\sigma_0^2=\frac{\sum_{i=1}^N (1-\gamma_\theta(x_i)) (x_i-\hat\mu_0)^2}{\sum_{i=1}^N  (1-\gamma_\theta(x_i))}
+\qquad
+\hat\sigma_1^2=\frac{\sum_{i=1}^N \gamma_\theta(x_i) (x_i-\hat\mu_1)^2}{\sum_{i=1}^N \gamma_\theta(x_i)}
+$$
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+Repeating this steps leads to the __Expectation-maximization__ (EM) algorithm:
+  1. Start by initialising the parameters $\theta$
+  2. Calculate the $\gamma_\theta(x_i)$: that is the __expectation__ step
+  3. Use $\gamma$ to calculate new parameters $\hat\theta$: that's the __maximization__ step
+  4. Set $\theta = \hat\theta$
+  4. Repeat until convergence
+<!-- #endregion -->
+
+[A. P. Dempster, N. M. Laird and D. B. Rubin, "Maximum Likelihood from Incomplete Data via the EM Algorithm" Journal of the Royal Statistical Society. Series B 
+Vol. 39, No. 1 (1977), pp. 1-38](https://www.jstor.org/stable/2984875?seq=1#metadata_info_tab_contents)
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Those steps for this simple two gaussians example are implemented below:
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+def expectation(x,theta):
+    pi, m1, s1, m2,s2 = theta
+    d2 = pi*st.norm(loc=m2, scale=s2).pdf(x)
+    d1 = (1-pi)*st.norm(loc=m1, scale=s1).pdf(x)
+    return d2/(d1+d2)
+
+def maximization(x,z):
+    N = len(z)
+    z_sum = z.sum()
+    m1 = np.sum((1-z)*x)/(N-z_sum)
+    m2 = np.sum(z*x)/z_sum
+    
+    s1 = np.sqrt(np.sum((1-z)*(x-m1)*(x-m1))/(N-z_sum))
+    s2 = np.sqrt(np.sum(z*(x-m2)*(x-m2))/z_sum)
+    
+    pi = z_sum/N
+    
+    return np.asarray([pi,m1,s1,m2,s2])
+ 
+def next_theta(x, theta):
+    z = expectation(x,theta)
+    return maximization(x,z)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+# Starting parameters
+# For mu I choose two data points at random
+start = np.random.choice(data,2, replace=False)
+# For sigma I use the std of the whole dataset
+theta = np.asarray([0.5, start[0], data.std(), start[1], data.std()])
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+#Collect the results of 300 iterations
+ts = [theta]
+for i in range(300):
+    theta = next_theta(data,theta)
+    ts.append(theta)
+thetas = np.stack(ts, axis=0)    
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Below are plots showing the convergence of all parameters.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### $\pi$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': '-'}, tags=c()}
+plt.scatter(range(len(thetas)), thetas[:,0], s=10, alpha=0.5, label='$\pi$');
+plt.axhline(0.3);
+plt.axhline(0.7);
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### $\mu$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': '-'}, tags=c()}
+plt.scatter(range(len(thetas)), thetas[:,1], s=10, alpha=0.5, label = "$\mu_1$", color = 'blue');
+plt.axhline(mus[0], color = 'blue')
+plt.scatter(range(len(thetas)), thetas[:,3], s=10, alpha=0.5, label = "$\mu_2$", color = 'orange');
+plt.axhline(mus[1], color='orange');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+### $\sigma$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': '-'}, tags=c()}
+plt.scatter(range(len(thetas)), thetas[:,2], s=10, alpha=0.5, label = "$\sigma_1$", color = 'blue');
+plt.axhline(stds[0], color = 'blue')
+plt.scatter(range(len(thetas)), thetas[:,4], s=10, alpha=0.5, label = "$\sigma_2$", color = 'orange');
+plt.axhline(stds[1], color='orange');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The algorithm is garantied (within numericall accuracy) never to decrease the likelihood, so let's check this
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+def loglikehood(x,theta):
+    pi, m1, s1, m2,s2 = theta
+    d2 = pi * st.norm(loc=m2, scale=s2).pdf(x)
+    d1 = (1-pi) * st.norm(loc=m1, scale=s1).pdf(x)
+    return np.log(d1 + d2).sum()
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+ll = [loglikehood(data,t) for t in thetas]
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plt.plot(range(len(ll)), ll, linewidth=2);
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plt.plot(range(1,len(ll)), ll[1:], linewidth=2);
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plt.plot(range(100,len(ll)), ll[100:], linewidth=2);
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+As you can see we gain most from the first step. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Below is a  simple animation of the whole process
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+# %%capture
+from matplotlib.animation import FuncAnimation
+xs = np.linspace(-5,5,500)
+fig, ax = plt.subplots()
+ax.set_ylim(0,0.4)
+l1, = plt.plot([-5,5],[0,0])
+l2, = plt.plot([-5,5],[0,0])
+l3, = plt.plot([-5,5],[0,0])
+plt.hist(data, bins=64,  density=True, histtype='step')
+
+
+def animate(theta):
+    pi, m1, s1, m2,s2 = theta
+    d2 = pi*st.norm(loc=m2, scale=s2).pdf(xs)
+    d1 = (1-pi)*st.norm(loc=m1, scale=s1).pdf(xs)
+    l1.set_data(xs,d1)
+    l2.set_data(xs,d2)
+    l3.set_data(xs,d1+d2)
+    
+    
+anim = FuncAnimation(fig, animate, thetas, repeat=False, interval=80)    
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+## Can take ~15 seconds to prepare
+anim
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+## Notes on the convergence
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Unidentifiability
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$p(x|\pi, \mu_0,\sigma_0, \mu_1, \sigma_1)=\pi \cdot p_\nc(x|\mu_1,\sigma_1) +  (1-\pi) \cdot p_\nc(x|\mu_0,\sigma_0),\quad  \pi\leftrightarrow (1-\pi), \mu_0\leftrightarrow \mu_1, \sigma_0\leftrightarrow \sigma_1$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Looking at the model mixture distribution function it's easy to notice that it is independent  with respect to the permutations of the parameters i.e. if we exchange $\pi\leftrightarrow (1-\pi)$, $\mu_0\leftrightarrow \mu_1$ and $\sigma_0\leftrightarrow \sigma_1$  the resulting pdf will be the same.  That's called _unidentifiability_. You can observe this on the convergence plots above. Different components are marked in different colors and as you can see the colors may not correspond to  the colors of the true values.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+### Maximum
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The EM algorithm is guaranteed not to decrease the likelihood at each step, so it will usually converge to some local maxima. One can start the algorithm with different initial parameters and choose the result with highest likelihood. 
+
+Actually the fact that the algorithm will rather find local then global maximum is a good thing. For mixture of gaussian the global maximum is degenerate (!) and can be obtained as follows: pick one point $x_0$ in the data and consider $\mu_0=x_0$ and $\sigma_0\rightarrow 0$. In this limit the contribution from this  single point to the likelihood will be infinite (why?) , while the other component will provide finite values for the rest of the data points. 
+<!-- #endregion -->
+
+$$p_\nc(x|x,\sigma_0)=\frac{1}{\sqrt{2\pi}\sigma}e^{\frac{(x-x)^2}{2\sigma^2}} = \frac{1}{\sqrt{2\pi}\sigma} $$
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+This behaviour is illustrated below. This have been tuned to this particular dataset. I have fixed the seed when generating data, but I am not sure if it is portable across all the numpy versions, so you may need to experiment. 
+
+Unfortunatelly the functions  defined above will fail because of the numerical instabilities. That is a common problem when dealing with probabilities that can have expotentially small values. The problem arises when we have small values in both numerator and denominator. The solution is to use logarithms and pull out the biggest term in the sum both in numerator and denominator. This is implemented in the function below
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+ds = data[:50]
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+def expectation_stable(x,theta):
+    pi, m1, s1, m2,s2 = theta
+    d = st.norm([m1,m2],[s1,s2]).logpdf(x.reshape(-1,1))+np.log(np.asarray([[1-pi, pi]]))
+    d_max = np.max(d,1)
+    
+    return np.exp(d[:,1]-d_max)/np.sum(np.exp(d-d_max.reshape(-1,1)),1)    
+```
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+#Some helper functions that will be used to break the iterations  when we reach a singularity
+def is_nan(t):
+    return np.any(np.isnan(t)) 
+
+def valid_thetas(th):
+    not_nan =  ~np.any(np.isnan(thetas),1) 
+    v_th = th[not_nan]
+    s_th = (v_th[:,2]>1.0e-10) & (v_th[:,4]>1.0e-10)
+    return v_th[s_th]
+```
+
+```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
+def singular(theta):
+    for i in range(100):
+        z = expectation_stable(ds,theta)
+        theta = maximization(ds,z)
+        if is_nan(theta):
+            return i
+    return False    
+```
+
+```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
+for i in range(50):
+    theta = [0.5, ds[3],  0.4, ds[i], 0.11]
+    l = singular(theta)
+    if l:
+        print(i,l, theta)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+theta = [0.5, ds[3],  0.4, ds[9], 0.121]
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+res = [theta]
+for i in range(100):
+    z = expectation_stable(ds,theta)
+    theta = maximization(ds,z)
+    if  is_nan(theta):
+        break
+    res.append(theta)
+thetas = np.stack(res,0)    
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+plt.scatter(np.arange(len(thetas)), thetas[:,2],s=5,label='$\\sigma_0$')
+plt.scatter(np.arange(len(thetas)), thetas[:,4],s=5,label='$\\sigma_1$');
+plt.legend();
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+If everything went all right with the example you should see on of the $\sigma$'s go to zero on this plot.  This corresponds to one of the distributions collapsing onto one point as illustrated in the plot below.
+<!-- #endregion -->
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+def plot(theta,ax):
+    xs = np.linspace(-4,4,5000)
+    ax.set_ylim(0,2.75)
+    pi, m1, s1, m2,s2 = theta
+    d2 = pi*st.norm(loc=m2, scale=s2).pdf(xs)
+    d1 = (1-pi)*st.norm(loc=m1, scale=s1).pdf(xs)
+    ax.plot(xs,d1,c='red')
+    ax.plot(xs,d2,c='blue')
+    #plt.plot(xs,d1+d2,c='green')
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+fig, ax = plt.subplots(1,3, figsize=(19,6))
+plot(thetas[5],ax[0])
+plot(thetas[6],ax[1])
+plot(thetas[7],ax[2])
+```
+
+```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
+# %%capture
+from matplotlib.animation import FuncAnimation
+x_extent = (-4,4)
+xs = np.linspace(*x_extent,5000)
+fig, ax = plt.subplots()
+ax.set_ylim(0,3)
+ax.set_xlim(*x_extent)
+l1, = plt.plot(x_extent,[0,0], color='blue')
+l2, = plt.plot(x_extent,[0,0], color='red')
+l3, = plt.plot(x_extent,[0,0], color='green')
+plt.hist(ds, bins=16,  density=True, histtype='step', color='green', range=x_extent)
+#plt.stem(ds, np.ones_like(ds), markerfmt='none')
+
+
+def animate(theta):
+    pi, m1, s1, m2,s2 = theta
+    d2 = pi*st.norm(loc=m2, scale=s2).pdf(xs)
+    d1 = (1-pi)*st.norm(loc=m1, scale=s1).pdf(xs)
+    l1.set_data(xs,d1)
+    l2.set_data(xs,d2)
+    #l3.set_data(xs,d1+d2)
+    
+anim = FuncAnimation(fig, animate, valid_thetas(thetas), repeat=False, interval=1000)    
+```
+
+```{python tags=c("skip"), slideshow={'slide_type': 'slide'}}
+anim
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+This behaviour will be much more pronounced in higher dimensions. That is because with same number of points, the points in higher dimensions will be on average more distanced from each other.  Thus it is easier to "isolate" one point which leads to the described singularity. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+###  Maximal a posteriori (MAP)  estimation
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+This problem can be avoided by  using the full Bayesian approach. To this end we add prior for $\pi$ and  for parameters $\mu_k$ and $\sigma_k$. For the EM algorithm this amounts to changing the expected log likelihood to
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\begin{split}
+\sum_{i=1}^N &\left[\gamma_\theta(x_i)\log p_\nc(x_i|\mu'_1,\sigma'_1) +  (1-\gamma_\theta(x_i))\log  p_\nc(x_i|\mu'_0,\sigma'_0)\right] 
++\sum_{i=1}^N \left[\gamma_\theta(x_i)\log \pi' +(1-\gamma_\theta(x_i))\log (1-\pi') \right]\\
+&+\log P(\pi) +\log P(1-\pi)+\log P(\mu_0,\sigma_0) +\log P(\mu_1, \sigma_1)
+\end{split}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+For $\pi$ we chose  [Beta](https://en.wikipedia.org/wiki/Beta_distribution) $(\alpha, \beta)$ distribution prior and  [Normal Inverse Gamma](https://en.wikipedia.org/wiki/Normal-inverse-gamma_distribution) $(m_k,\lambda_k, \alpha_k,\beta_k)\;k=0,1$ prior for parameters $\mu_k$ and $\sigma_k$.  Fitting with those priors is described in detail in the normal distribution notebook. The result is 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+$$\hat\pi = \frac{\sum_{i=1}^N\gamma_\theta(x_i)+\alpha-1}{N+\alpha+\beta-2}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+$$
+\hat\mu_0 = \frac{\sum_{i=1}^N  (1- \gamma_\theta(x_i)) x_i +\lambda_0 m_0}{\sum_{i=1}^N  (1-\gamma_\theta(x_i))+\lambda_0}
+\qquad
+\hat\mu_1 = \frac{\sum_{i=1}^N \gamma_\theta(x_i) x_i+\lambda_1 m_1}{\sum_{i=1}^N \gamma_\theta(x_i)+\lambda_1}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+$$
+\hat\sigma_0=\frac{\sum_{i=1}^N (1-\gamma_\theta(x_i)) (x_i-\hat\mu_0)^2+2\beta_0 
++\lambda_0(\hat\mu_0-m)^2}
+{\sum_{i=1}^N  (1-\gamma_\theta(x_i))+2\alpha_0 + 3}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+$$
+\hat\sigma_1=\frac{\sum_{i=1}^N \gamma_\theta(x_i) (x_i-\hat\mu_1)^2+
+2\beta_1 +\lambda_1(\hat\mu_1-m_1)^2}
+{\sum_{i=1}^N \gamma_\theta(x_i)+2\alpha_1 + 3}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+That introduces 10 (!) more hyperparameters: $\alpha$  and $\beta$ for Beta distribution and $m_k,\lambda_k, \alpha_k,\beta_k$ for two Normal Inverse  Gamma priors on $\mu_k$ and $\sigma_k$ ($k=0,1$). 
+We can simplify things assuming a symmetric prior on $\pi$ with $\alpha=\beta$ leading to
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$\hat\pi = \frac{\sum_{i=1}^N\gamma_\theta(x_i)+\alpha-1}{N+2\alpha-2}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+$\alpha$ smaller then one will tend to concentrate the probability mass on one of the components and higher values of  $\alpha$ will favor more uniform  distribution. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Setting $\lambda_k = 0$ effectively removes the prior on the $\mu_k$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$
+\hat\mu_0 = \frac{\sum_{i=1}^N  (1- \gamma_\theta(x_i)) x_i}{\sum_{i=1}^N  (1-\gamma_\theta(x_i))}
+\qquad
+\hat\mu_1 = \frac{\sum_{i=1}^N \gamma_\theta(x_i) x_i}{\sum_{i=1}^N \gamma_\theta(x_i)}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+and finally we will set $\alpha_k$ to $3/2$ resulting in: 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$
+\hat\sigma_0=\frac{\sum_{i=1}^N (1-\gamma_\theta(x_i)) (x_i-\hat\mu_0)^2+2\beta_0}
+{\sum_{i=1}^N  (1-\gamma_\theta(x_i))+2\alpha_0 + 3}
+\quad
+\hat\sigma_1=\frac{\sum_{i=1}^N \gamma_\theta(x_i) (x_i-\hat\mu_1)^2+
+2\beta_1}
+{\sum_{i=1}^N \gamma_\theta(x_i)+2\alpha_1 + 3}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+That leaves us  with only three additional parameters. Those formulas are implemented in functions below
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+def MAP(x,z, a,b0, b1):
+    N = len(z)
+    z_sum = z.sum()
+    m1 = np.sum((1-z)*x)/(N-z_sum)
+    m2 = np.sum(z*x)/z_sum
+    
+    s1 = np.sqrt((np.sum((1-z)*(x-m1)*(x-m1))+2*b0)/(N-z_sum+6))
+    s2 = np.sqrt((np.sum(z*(x-m2)*(x-m2))+2*b1)/(z_sum+6))
+    
+    pi = (z_sum+a-1)/(N+2*a-2)
+    
+    return np.asarray([pi,m1,s1,m2,s2])
+ 
+def next_theta_MAP(x, theta,a,b0,b1):
+    z = expectation_stable(x,theta)
+    return MAP(x,z,a,b0,b1)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+I leave it to you to check  they behaviour.
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+## Gaussian  Mixture Discriminant Analysis
+<!-- #endregion -->
+
+<!-- #region tags=[] -->
+### Half circles revisited
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Armed with the EM algorithm we now come back to the half circles example. However we will not write our own EM algorithm for multivariate normal distribution, but we will use an implementation from scikit-learn library provided by the `GaussianMixture` class
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+from sklearn.mixture import GaussianMixture
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+We fill fit each class separatelly to a two Gaussian mixture
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+hc0_cmp = GaussianMixture(n_components=2, max_iter=100, tol=0.0001) 
+hc1_cmp = GaussianMixture(n_components=2, max_iter=100, tol=0.0001) 
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+hc0 = hc_train[hc_lbl_train==0]
+hc1 = hc_train[hc_lbl_train==1]
+```
+
+```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+hc0_cmp.fit(hc0)
+hc1_cmp.fit(hc1)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The fitted parameters are accesible as attributes of the `GaussianMixture` object
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+print(hc0_cmp.weights_)  #pi
+print(hc0_cmp.means_)    #mu
+print(hc0_cmp.covariances_) #Sigma (covariance) matrices
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Now we will use those fitted mixtures to construct a classifier. In each class $k=0,1$ the class conditial probability is given by the mixture
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+$$p(x|c=k)=\pi_{k} p_\mathcal{N}(x|\b\mu_k,\b\Sigma_k)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+The class probability given $\b x$  is calculated from Bayes theorem:
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} tags=[] -->
+$$p(c=k|\b x)=\frac{p(x|c=k) P(c=k)}{\sum_{k}p(x|c=k) P(c=k)}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+This is implemented in the functions below
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+def make_pdf(cmp):
+    """
+    Takes a GaussianMixture object and returns corresponding
+    probability distribution function
+    """
+    n_cmp = cmp.n_components
+    dists = [st.multivariate_normal(cmp.means_[i], cmp.covariances_[i]) for i in range(n_cmp)]
+    def pdf(x):
+        p = 0.0
+        for i in range(n_cmp):
+            p+= cmp.weights_[i]*dists[i].pdf(x)
+        return p
+    
+    return pdf
+    
+    
+def make_predict_proba(cmp0, cmp1, pi0=0.5, pi1=.5):
+    """
+    Takes two GaussianMixture object and corresponding priors and returns 
+    pdf for conditional probability P(c=1|x)
+    """
+    pdf0 = make_pdf(cmp0)
+    pdf1 = make_pdf(cmp1)
+    def p(x):
+        p0=pi0*pdf0(x)
+        p1=pi1*pdf1(x)
+        return p1/(p1+p0)    
+        
+    return p
+        
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+mgd_predict_proba = make_predict_proba(hc0_cmp, hc1_cmp, 0.5, 0.5)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+mgd_proba = mgd_predict_proba(hc_test)
+```
+
+```{python slideshow={'slide_type': 'skip'}, tags=c()}
+confusion_matrix(hc_lbl_test, mgd_proba>0.5, normalize='true')
+```
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+from mchlearn.plotting import roc_plot, add_roc_curve
+fig, ax = roc_plot()
+add_roc_curve(hc_lbl_test, qda_proba, 'qda', ax);
+add_roc_curve(hc_lbl_test, mgd_proba, 'mga', ax);
+ax.legend(title='AUC');
+```
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+We see a dramatic improvement in the quality of the classifier.  Which is explainable by looking at the fitted components and the new decision boundary
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, tags=c()}
+fig, ax = plt.subplots()
+blue_red = np.asarray([[0., 0.,1.],[1.,0.,0.]]) 
+decision_plot(half_circles[:,:2], half_circles[:,2].astype('int32'), blue_red, np.linspace(-2.5,2.5,200), np.linspace(-1.5,1.5,200),
+              mgd_predict_proba, lambda x: 0 if x<0.5 else 1  , ax = ax)
+confidence_ellipse(hc0_cmp.means_[0], hc0_cmp.covariances_[0], ax = ax, edgecolor='blue')
+confidence_ellipse(hc0_cmp.means_[1], hc0_cmp.covariances_[1], ax = ax, edgecolor='blue')
+confidence_ellipse(hc1_cmp.means_[0], hc1_cmp.covariances_[0], ax = ax, edgecolor='red')
+confidence_ellipse(hc1_cmp.means_[1], hc1_cmp.covariances_[1], ax = ax, edgecolor='red');
+```
+
+<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+## Choosing the number of components
+<!-- #endregion -->
+
+<!-- #region tags=["skip"] slideshow={"slide_type": "skip"} -->
+In the example above we have somewhat arbitrarly choosen the number of gaussian components to be two for each class. This was justified by the shape of the distribution. However in general case we would be unable to look at the high dimensional data. It's obvious that choosing a bigger number of componets will better model the _training_ data. But at certain point it will overfit and start degrading the performace of the classifier on the test set. As with other hyperparameters, one way of  searching for best number of components is to use grid search with cross validation. 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+Unfortunatelly we cannot use the scikit-learn functionality  described in text analysis notebook because our classifier does not conform to the expected interface.  We can either make our own cross validation search using e.g. scikit-learn [`KFold`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html) or `StratifiedKFold` classes or write our own classifier in a way conformant to the scikit-learn interface. 
+<!-- #endregion -->
+
+```{python}
+def evaluate(nc0, nc1,X,y, X_valid, y_valid):
+
+    hc0_cmp = GaussianMixture(n_components=nc0, max_iter=100, tol=0.0001) 
+    hc1_cmp = GaussianMixture(n_components=nc1, max_iter=100, tol=0.0001) 
+
+    hc0 = X[y==0]
+    hc1 = X[y==1]
+
+    hc0_cmp.fit(hc0)
+    hc1_cmp.fit(hc1)
+    
+    gmda =  make_predict_proba(hc0_cmp, hc1_cmp, 0.5, 0.5)
+    proba = gmda(X_valid)
+    
+    return f1_score(y_valid, proba>0.5)
+```
+
+```{python}
+evaluate(2,2,hc_train, hc_lbl_train, hc_test, hc_lbl_test)
+```
+
+## Cross validation
+
+```{python}
+from sklearn.model_selection import KFold
+```
+
+```{python}
+folder = KFold(5,shuffle=True, random_state=67544)
+```
+
+```{python}
+folder.get_n_splits()
+```
+
+```{python}
+f1=0
+for train_i, test_i in folder.split(hc_train, hc_lbl_train):
+    f1+=evaluate(2,2,hc_train[train_i], hc_lbl_train[train_i], hc_train[test_i], hc_lbl_train[test_i])
+print(f1/folder.get_n_splits())
+```
