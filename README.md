@@ -1,60 +1,58 @@
-Dear Students,
+# Machine Learning 
 
-The following notebooks will contain my part of the Machine Learning course. I have done my best to annotate them and make them self-contained. However this is still very far from "textbook quality" :( 
-
-The notebooks assume some basic understanding of probability and statistics, but that anyway were the prerequisites for the course. The notebooks contain Python code without much explanation. It's up to you to look up the documentation of the library functions that I have used. 
-
-To run the notebooks you need a python environment. I strongly suggest you use `conda`. 
+Materials for the Machine Learning course. 
 
 
-First install [anaconda](https://www.anaconda.com/distribution/) or [miniconda](https://docs.conda.io/en/latest/miniconda.html). Please install python 3.8 or higher. 
+## Setting up the python environment
 
-Then create a new _virtual environment_ for your projects e.g.
-```
-conda -n machinelearning python=3.9
-```
-This will create a virtual environment named `machinelearning`. 
-
-To activate the environment you type:
-```
-conda activate machine_earning 
-```
-
-
-In case of Anaconda distribution most of the needed packages will be preinstalled. In case of miniconda you have to install them yourself using `conda install`. 
-
-Here is a hopefully complete list of packages you will need:
+In this course you will be working with python using jupyter notebooks or jupyter lab (prefered). So first you have to set up a proper python environment. I strongly encourage you to use some form of a virtual environment. I recommend the [Anaconda](https://docs.anaconda.com/anaconda/install/index.html) or its smaller subset [miniconda](https://docs.conda.io/en/latest/miniconda.html). Personally I recommend using 
+[mambaforge](https://github.com/conda-forge/miniforge#mambaforge) as `conda` tends to be rather slow. 
+After installing `mambaforge` create a new virtual environment `ml` (or any other name you want):
 
 ```
-conda install jupyterlab
-conda install jupytext -c conda-forge
-conda install numpy scipy 
-conda install matplotlib
-conda install seaborn
-conda install pandas
-conda install scikit-learn
-conda install scrapbook
+conda create -n ml python=3.9
 ```
- 
-It can happen that thos commands take ages ! :( In that case install `mamba` with
+Then activate the environment  by running
 ```
-conda install mamba -c conda-forge
+conda activate ml
 ```
-
-and run same installation commands using `mamba` instead of `conda`. 
- 
-Then you can type
-```
-jupyter lab 
-```
-to open jupyter notebook  and start working :)
-
 To close environment you type 
 ```
 conda deactivate
 ```
- 
-Hope this helps. 
+
+Now you can install required packages (if you are using Anaconda some maybe already installed):
+
+```
+mamba install  jupyterlab jupytext  ipywidgets
+mamba install numpy scipy  scikit-learn
+mamba install matplotlib
+```
+If you didn't install `mamba` then you can substitute `conda -c conda-forge`(`-c conda-forge` tells to add `conda-forge` channel which is turned on by default in `mambaforge` ) for `mamba`. I tend to use `mamba` as it is markedly faster then `conda`.  
+
+After installing all required packages you can start `jupyter lab` by running 
+```
+jypyter lab
+```
+
+## Rmd format
+
+The notebooks in the repository are stored in [Rmd (R Markdown)](https://rmarkdown.rstudio.com/articles_intro.html) format. Thanks to the `jupytext` package you can open them right in the jupyter lab, by clicking the file name with righthand mouse button and choosing `open with` and then `Notebook`. If you are using jupyter notebook the you have to convert them prior to opening by running   
+```shell
+jupytext --to notebook <Rmd file name>
+```
+
+## Using python in lab
+
+When using the computers in lab, please log to your linux account and then run
+```
+source /app/Python/3.10.4/VE/defaults/bin/activate
+```
+Then you can run 
+```
+jupyter lab
+```
+
 
 
 
