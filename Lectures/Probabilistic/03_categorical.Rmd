@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.13.8
+      jupytext_version: 1.14.5
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -238,8 +238,12 @@ cars_training_grouped = cars_train.groupby(['bargain',
 and count the size of each group
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'slide'}}
 group_counts=cars_training_grouped.size()
+```
+
+```{python}
+group_counts
 ```
 
 <!-- #region slideshow={"slide_type": "skip"} -->
@@ -374,24 +378,12 @@ np.bincount(encoded_test_class.astype('int64'))
 from sklearn.metrics import multilabel_confusion_matrix, confusion_matrix, ConfusionMatrixDisplay
 ```
 
+<!-- #region slideshow={"slide_type": "slide"} -->
 ### Confusion matrix
+<!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "notes"} -->
 The accuracy  generalises intuitively to non-binary classification.  The confusion matrix also generalises to this case.  
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
-confusion_matrix(true, pred)
-```
-
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
-ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true', display_labels=features_encoder.categories_[-1]);
-```
-
-### Averaging 
-
-<!-- #region slideshow={"slide_type": "notes"} -->
-Other metrics are defined only for binary classification problem as they rely on a 2x2 confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class   $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -399,34 +391,22 @@ pred = predicted_test_class
 true = encoded_test_class
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
-def stat(y_true, y_pred, c):
-    lbl_true = np.where(y_true==c,1,0)
-    lbl_pred = np.where(y_pred==c,1,0)
-    TP = np.sum(lbl_true * lbl_pred)
-    FP = np.sum( (1-lbl_true)*lbl_pred)
-    TN = np.sum((1-lbl_true) * (1-lbl_pred))
-    FN = np.sum(lbl_true * (1-lbl_pred))            
-    return TP, FP,FN, TN
+```{python slideshow={'slide_type': 'slide'}}
+confusion_matrix(true, pred)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
-for i in range(3):
-    print( stat(true,pred, i))
+```{python slideshow={'slide_type': 'slide'}}
+ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true', 
+                                        display_labels=features_encoder.categories_[-1]);
 ```
 
-```{python}
-
-```
-
-<!-- #region slideshow={"slide_type": "skip"} -->
-Once we have the statistics for each binary classifier we can combine the together. We will consider _micro_ and _macro_ averaging. 
+<!-- #region slideshow={"slide_type": "slide"} -->
+### Averaging 
 <!-- #endregion -->
 
-```{python}
-mcf = multilabel_confusion_matrix(true, pred)
-print(mcf)
-```
+<!-- #region slideshow={"slide_type": "notes"} -->
+Other metrics are defined only for binary classification problem as they rely on a 2x2 confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class   $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
+<!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "fragment", "slideshow": {"slide_type": "slide"}} -->
 <table style="font-size:1.5em;">
@@ -436,6 +416,28 @@ print(mcf)
     <tr> <th> P       </th> <td>FN </td> <td>TP </td> <td>P</td></tr>
 </table>
 <!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+def stat(y_true, y_pred, c):
+    lbl_true = np.where(y_true==c,1,0)
+    lbl_pred = np.where(y_pred==c,1,0)
+    (TN,FP),(FN,TP) = confusion_matrix(lbl_true, lbl_pred)    
+    return TP, FP,FN, TN
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+for i in range(3):
+    print( stat(true,pred, i))
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Once we have the statistics for each binary classifier we can combine the together. We will consider _micro_ and _macro_ averaging. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}}
+mcf = multilabel_confusion_matrix(true, pred)
+print(mcf)
+```
 
 <!-- #region slideshow={"slide_type": "slide"} -->
 ### Micro averaging
@@ -582,7 +584,7 @@ f1_score(encoded_test_class, predicted_test_class, average='macro')
 ### Weighted averaging 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "-"} -->
+<!-- #region slideshow={"slide_type": "skip"} -->
 And finally the weighted averaging is like macro averaging but we  weight the average by the support of each class _i.e._ the number of labels of each class. E.g. for precision
 <!-- #endregion -->
 
@@ -609,19 +611,19 @@ precision_score(encoded_test_class, predicted_test_class, average='weighted')
  Show that weighted averaging for recall gives same result as micro averaging.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+<!-- #region slideshow={"slide_type": "notes"} -->
 As you may have guessed scikit-learn library has some convenient functions that calculate those metrics at once.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 from sklearn.metrics import precision_recall_fscore_support,  classification_report
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 precision_recall_fscore_support(encoded_test_class, predicted_test_class, beta = 2, average = 'macro')
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(classification_report(encoded_test_class, predicted_test_class))
 ```
 

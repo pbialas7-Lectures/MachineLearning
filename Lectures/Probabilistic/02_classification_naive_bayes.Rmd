@@ -5,65 +5,66 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.13.8
+      jupytext_version: 1.14.5
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+<!-- #region slideshow={"slide_type": "slide"} -->
 # Multi-features classification and  Naive Bayes
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+<!-- #region slideshow={"slide_type": "notes"} -->
 In this notebook we will continue to work with the gender classifier based on height. We will use some real(?) data. We will also add weight as additional  feature. This will introduce us to Naive bayes classifier. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
+import sklearn
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %matplotlib inline
 plt.rcParams["figure.figsize"] = [12,8]
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} tags=[] -->
+<!-- #region slideshow={"slide_type": "slide"} -->
 ## Height & weight data set
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+<!-- #region slideshow={"slide_type": "notes"} -->
 The only data I could find was a [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height). This data set does not contain any  description of origin but use of inches and pounds suggests an american or english population. The data consists of 10000 points each specifying sex, height and weight of one person.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} tags=[] -->
+<!-- #region slideshow={"slide_type": "notes"} -->
 The data is in popular "coma separated values" (CSV) format. We will use  [pandas library](https://pandas.pydata.org) to read it. Pandas is a very popular library for working with dataframes and series. It would be really worth your time to become acquainted with it. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 import pandas as pd
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 data = pd.read_csv('../../Data/HeightWeight/weight-height.csv')
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+<!-- #region slideshow={"slide_type": "skip"} -->
 The `data` is a [Dataframe](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 type(data)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} tags=[] -->
+<!-- #region slideshow={"slide_type": "skip"} -->
 which is a kind of "table on steroids". We can look at first _n_ rows using `head` method
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 data.head(n=3)
 ```
 
@@ -71,7 +72,7 @@ data.head(n=3)
 Another useful method is 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 data.info()
 ```
 
@@ -281,9 +282,14 @@ train_data_M.Height.hist(bins=32, density=True, ax=ax , color=m_color, alpha=0.7
 hs =np.linspace(1.3,2.1,100)
 ax.plot(hs, pd_F.pdf(hs), c=f_color);
 ax.plot(hs, pd_M.pdf(hs), c=m_color);
+plt.close()
 ```
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+```{python}
+fig
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
 The results look reasonable and we will assume the normal distribution of heights for each sex throughout this notebook. 
 <!-- #endregion -->
 
@@ -311,28 +317,31 @@ and
 $$s^2\equiv \overline{y^2}-\bar{y}^2\qquad \bar{y^2}\equiv\frac{1}{n}\sum_{i=1}^n y^2_i$$
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "slide"} -->
 #### Caveat
 <!-- #endregion -->
 
+<!-- #region slideshow={"slide_type": "skip"} -->
 The variance estimator $s^2$ is [_biased_](https://en.wikipedia.org/wiki/Bias_of_an_estimator) and very often its unbiased version 
-
-
-$$\frac{n}{n-1}s^2$$
+<!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "-"} -->
+$$\frac{n}{n-1}s^2$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} -->
 is used instead. 
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "skip"} -->
-Which version is calculated is controled by the parameter `ddof` of `std` function in numpy or pandas. But please be warned that in numpy the default value of this parameter is zero, correpsonding to $s$ while in pandas this is one and returns the unbiased version. Of course for large $n$ the difference is negligible. 
+Which version is calculated is controlled by the parameter `ddof` of `std` function in numpy or pandas. But please be warned that in numpy the default value of this parameter is zero, corresponding to $s$ while in pandas this is one and returns the unbiased version. Of course for large $n$ the difference is negligible. 
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "skip"} -->
 Those are the basic facts from statistics and I assume you are acquainted with them :) But to refresh your memory I will present here the derivation of the maximal likelihood estimator for normal distribution. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "skip"} -->
 Given the mean $\mu$ and standard deviation $\sigma$ the  probability of obtaining a sequence of $n$ random  values $y_i$ is
 <!-- #endregion -->
 
@@ -497,78 +506,38 @@ ax.set_xlabel("Height [m]");
 ax.set_ylabel("P(F|h)");
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}}
 from scipy.optimize import fsolve
-threshold = fsolve(lambda h: pdf_F_cond_h(h)-0.5, 1.7)
+threshold = fsolve(lambda h: pdf_F_cond_h(h)-0.5, 1.7)[0]
 print(threshold)
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
-from collections import namedtuple
-```
-
-```{python slideshow={'slide_type': 'skip'}}
-ConfusionMatrix = namedtuple('ConfusionMatrix',['TP','FP', 'FN', 'TN'])
-
-def confusion_matrix(labels, probability, th=0.5):
-    """
-    Calculates the confusion matrix from true labels and predicted probabilities
-    
-    Parameters:
-    labels -- 
-    """
-    p = (labels == 1).sum()
-    n = (labels == 0).sum()
-    
-    pred = (probability >= th)
-    fp = (pred > labels).sum()
-    fn = (pred < labels).sum()
-    
-    return ConfusionMatrix(p-fn, fp, fn, n-fp)
-
-def rates(cm):
-    P = cm.TP + cm.FN
-    N = cm.FP + cm.TN
-    
-    tpr = cm.TP/P
-    fpr = cm.FP/N
-    fnr = cm.FN/P
-    tnr = cm.TN/N
-    
-    return tpr, fpr, fnr, tnr
-    
-def accuracy(cm):    
-    P = cm.TP + cm.FN
-    N = cm.FP + cm.TN
-    
-    return (cm.TP+cm.TN)/(P+N)
-
-def precission(cm):
-    return (cm.TP)/(cm.TP+cm.FP)
-    
-
-def describe(cm):
-    P = cm.TP + cm.FN
-    N = cm.FP + cm.TN
-    
-    tpr, fpr,fnr, tnr = rates(cm)
-    
-    print("Total = {:d} (P = {:d}, N = {:d})".format(P+N, P,N))
-    print("TPR = {:5.3f} FPR = {:5.3f}".format(tpr,fpr))
-    print("FNR = {:5.3f} TNR = {:5.3f}".format(fnr,tnr))
-    
-    print("Accuracy  = {:5.3f}".format(accuracy(cm)) )
-    print("Precision = {:5.3f}".format(precission(cm)) )
+```{python slideshow={'slide_type': 'slide'}}
+sklearn.metrics.confusion_matrix(train_data['Gender']=='Female',pdf_F_cond_h(train_data.Height)>0.5, normalize='true')
 ```
 
 ```{python slideshow={'slide_type': 'slide'}}
-describe(confusion_matrix(train_data.Gender=='Female', pdf_F_cond_h(train_data.Height)) )
+sklearn.metrics.ConfusionMatrixDisplay.from_predictions(train_data['Gender']=='Female',pdf_F_cond_h(train_data.Height)>=0.5, normalize='true');
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+sklearn.metrics.ConfusionMatrixDisplay.from_predictions(test_data['Gender']=='Female',test_data.Height<=threshold, normalize='true');
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+sklearn.metrics.accuracy_score(test_data['Gender']=='Female',test_data.Height<=threshold)
 ```
 
 ```{python slideshow={'slide_type': 'fragment'}}
-cm_test = confusion_matrix(test_data.Gender=='Female', pdf_F_cond_h(test_data.Height))
-tpr, fpr,_,_=rates(cm_test)
-describe(cm_test )
+sklearn.metrics.precision_score(test_data['Gender']=='Female',test_data.Height<=threshold)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+sklearn.metrics.f1_score(test_data['Gender']=='Female',test_data.Height<=threshold)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+print(sklearn.metrics.classification_report(test_data['Gender']=='Female',test_data.Height<=threshold))
 ```
 
 ```{python slideshow={'slide_type': 'skip'}}
@@ -599,6 +568,10 @@ def roc_plot(plt, title ='ROC', figsize=[8,8]):
     ax.set_title(title)
     ax.plot([0,1,1,0,0],[0,0,1,1,0], '-', color='grey', linewidth=1)
     return fig,ax
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+(tnr, fpr),(fnr, tpr) = sklearn.metrics.confusion_matrix(test_data['Gender']=='Female',test_data.Height<=threshold, normalize='true')
 ```
 
 ```{python slideshow={'slide_type': 'slide'}}
@@ -724,12 +697,12 @@ Correlation can be easily calculated using [pandas.Series.corr](https://pandas.p
 train_data[['Height', 'Weight']].corr()
 ```
 
-<!-- #region slideshow={"slide_type": "notes"} -->
-This gives us a symmetric correlation matrix. On the diagonal we always have 1.0. The off diagonal  entries correspond to correlation between two variables. As expected height and weight are highly correlated (the maximal value of correlation  coefficient is one). 
-<!-- #endregion -->
-
 <!-- #region slideshow={"slide_type": "skip"} -->
 Let's look separately at each sex
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "notes"} -->
+This gives us a symmetric correlation matrix. On the diagonal we always have 1.0. The off diagonal  entries correspond to correlation between two variables. As expected height and weight are highly correlated (the maximal value of correlation  coefficient is one). 
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -765,15 +738,15 @@ Because we have changed the data we have to redo the train test split. Using sam
 train_data, test_data  = train_test_split(data,test_size=0.25, random_state=seed)
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 from sklearn.linear_model import LinearRegression
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 reg = LinearRegression().fit(train_data['Height'].values.reshape(-1,1), train_data['BMI'].values)
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 hs = np.linspace(1.5,1.9)
 plt.scatter(train_data['Height'],train_data['BMI'], alpha=0.2, c=color);
 plt.xlabel('Height')
@@ -794,7 +767,7 @@ train_data_F = train_data.loc[data['Gender']=='Female']
 train_data_M   = train_data.loc[data['Gender']=='Male']
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 reg_F = LinearRegression().fit(train_data_F['Height'].values.reshape(-1,1), train_data_F['BMI'].values)
 reg_M = LinearRegression().fit(train_data_M['Height'].values.reshape(-1,1), train_data_M['BMI'].values)
 ```
@@ -934,16 +907,15 @@ def make_pdf_P_cond_NB(labels, h, bmi ):
 ```
 
 ```{python slideshow={'slide_type': 'skip'}}
-nb_prob = make_pdf_P_cond_NB(train_data['Gender']=='Female', train_data.Height, train_data.BMI)
+nb_prob = make_pdf_P_cond_NB(test_data['Gender']=='Female', test_data.Height, test_data.BMI)
 ```
 
 ```{python slideshow={'slide_type': 'skip'}}
-nb_cm  = confusion_matrix(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI) )
-nb_tpr, nb_fpr, _,_ = rates(nb_cm)
+sklearn.metrics.ConfusionMatrixDisplay.from_predictions(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI)>0.5, normalize='true' );
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
-describe(nb_cm)
+```{python slideshow={'slide_type': 'skip'}}
+(_, nb_fpr),(_, nb_tpr) =sklearn.metrics.confusion_matrix(test_data.Gender=='Female', nb_prob(test_data.Height, test_data.BMI)>0.5, normalize='true' )
 ```
 
 ```{python slideshow={'slide_type': 'skip'}}
