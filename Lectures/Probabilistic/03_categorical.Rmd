@@ -24,14 +24,14 @@ plt.rcParams["figure.figsize"] = [12,8]
 ```
 
 <!-- #region slideshow={"slide_type": "slide"} -->
-## Training (Naive) Bayes
+## Training  Bayes
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "notes"} -->
 As we have shown in the previous lectures training a Bayes classifier amounts to finding the conditional probability distributions of the features $\mathbf{f}$ given the class label $c$. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "-"} -->
+<!-- #region slideshow={"slide_type": "fragment"} -->
 $$P(\mathbf{F}=\mathbf{f}|C=c)$$
 <!-- #endregion -->
 
