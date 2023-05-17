@@ -247,7 +247,7 @@ creates a series with number of passengers of each gender and class
 by_sex_pclass
 ```
 
-Same effect can be achieved by passing `level` argument to the series `sum` function. The level argument lists the levels which are __not__ summed over. In other words those are the levels left after summation. To sum over the `survived` level we use
+Same effect can be achieved by using groupby with  `level` argument. The level argument lists the levels which are __not__ summed over. In other words those are the levels left after summation. To sum over the `survived` level we use
 
 ```{python}
 by_sex_class = train_counts.groupby(level=['sex','pclass']).sum()
@@ -306,6 +306,9 @@ We can check that we indeed get the identical values
 p_surv_cond_sex_pclass
 ```
 
+
+We can check that the probabilities of survival and death sum up 1 as expected
+
 ```{python}
 p_surv_cond_sex_pclass.groupby(level=['sex', 'pclass']).sum()
 ```
@@ -319,61 +322,10 @@ The TPR is the fraction of survivors that were classified as survivors. And FPR 
 For ROC and AUC use the functions from scikit-learn library.
 
 
-#### c) Are those features conditionally independent? 
+#### c) Implement a Naive bayes classifier using same features and compare it with a)
 
 
-To answer this question we need to compare conditional probability distribution
-
-
-$$P(sex,pclass|survived)$$
-
-
-with
-
-
-$$P(sex|survived)\times P(pclass|survived)$$ 
-
-
-Please note that $survived$ is actually a label for the survival status: 1 for survived and 0 for dead. 
-
-
-By definition
-
-
-$$P(sex,pclass|survived)= \frac{P(sex,pclass,survived)}{P(survived)}$$
-
-
-which can be calculated based on the `train_counts` object. 
-
-
-#### d) Implement a Naive bayes classifier using same features and compare it with a)
+Use the `CategoricalNB`function.
 
 
 Please calculate the FPR and TPR as well as AUC and draw the ROC curve for train and test datasets. 
-
-
-We  have already calculated the probability 
-
-
-$$P_{NB}(sex,pclass|survived) = P(sex|survived)\times P(pclass|survived)$$
-
-
-From which we can calculate 
-
-
-$$P_{NB}(survived|sex,pclass)= \frac{P_{NB}(sex,pclass|survived)P(survived)}{P_{NB}(sex,pclass)}$$
-
-
-where the denominator is also calculated from the factorised probabilities
-
-
-$$P_{NB}(sex,pclass)= P_{NB}(sex,pclass|survived=1)P(survived=1)+P_{NB}(sex,pclass|survived=0)P(survived=0)$$
-
-
-That is very important because the result must be a probability and add up to one
-
-
-$$P_{NB}(survived=1|sex,pclass)+P_{NB}(survived=0|sex,pclass)=1$$
-
-
-for each sex and passenger class. 
