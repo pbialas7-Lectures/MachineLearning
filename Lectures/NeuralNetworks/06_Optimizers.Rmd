@@ -6,9 +6,9 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.11.1
+      jupytext_version: 1.14.5
   kernelspec:
-    display_name: Python 3
+    display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
@@ -30,7 +30,7 @@ Image(filename='../img//boromir.png')
 <!-- <img src='../img//boromir.png'/> 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 import numpy as np
 import matplotlib.pyplot as plt
 # %matplotlib inline
@@ -39,7 +39,7 @@ import torch, torchvision
 
 ```{python slideshow={'slide_type': 'skip'}}
 import sys
-sys.path.append('../../src')
+sys.path.append('../../mchlearn/')
 import utils
 ```
 
@@ -123,16 +123,23 @@ sin_example.run_example(p, gd, batch_data_loader);
 ## "Ravine"
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'skip'}}
 rav_par = np.asarray([1.0,10.0]).astype('float32')
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'skip'}}
 ravine_example = utils.RavineExample(rav_par)
 ```
 
 ```{python slideshow={'slide_type': 'slide'}}
 p = torch.FloatTensor([-8, 3])
+p.requires_grad_(True);
+gd = torch.optim.SGD([p], lr=0.02)
+ravine_example.run_example(p, gd,100,1.0 );
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+p = torch.FloatTensor([-8, 0])
 p.requires_grad_(True);
 gd = torch.optim.SGD([p], lr=0.02)
 ravine_example.run_example(p, gd,100,1.0 );
@@ -153,14 +160,21 @@ $$
 ```{python slideshow={'slide_type': 'slide'}}
 p = torch.FloatTensor([-8, 3])
 p.requires_grad_(True);
-gd = torch.optim.SGD([p], lr=0.021, momentum=0.9)
+gd = torch.optim.SGD([p], lr=0.021, momentum=0.1)
+ravine_example.run_example(p, gd,100,1.0 );
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+p = torch.FloatTensor([-8, 0])
+p.requires_grad_(True);
+gd = torch.optim.SGD([p], lr=0.021, momentum=0.99)
 ravine_example.run_example(p, gd,100,1.0 );
 ```
 
 ```{python slideshow={'slide_type': 'slide'}}
 p = torch.FloatTensor([3.2,-0.4])
 p.requires_grad_(True)
-gd = torch.optim.SGD([p], lr=0.01, momentum=0.9)
+gd = torch.optim.SGD([p], lr=0.01, momentum=0.8)
 sin_example.run_example(p, gd, batch_data_loader);
 ```
 
@@ -205,140 +219,12 @@ plt.legend();
 ```
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
-## Nesterov Accelerated Gradient Descent
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'fragment'}}
-Image(filename="nesterov_update_vector.png")
-```
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-$$\begin{align}
-v_{t+1}& = \mu v_{t} + \nabla_\theta L(\theta_t-\eta \mu v_t)\\
-\theta_{t+1}& = \theta_{t}-\eta v_{t+1}
-\end{align}
-$$
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$r_t = \theta_t-\eta\mu v_t$$
-$$\theta_t = r_t+\eta\mu v_t$$
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$\begin{align}
-v_{t+1}& = \mu v_{t} + \nabla_r L(r)\\
-r_{t+1}& = r_{t}-\eta\left(\nabla_r L(r) +\mu v^{t+1}\right)
-\end{align}
-$$
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([-8, 3])
-p.requires_grad_(True);
-gd = torch.optim.SGD([p], lr=0.01, momentum=0.9, nesterov=True)
-ravine_example.run_example(p, gd,100,1.0 );
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([3.2,-0.4])
-p.requires_grad_(True)
-gd = torch.optim.SGD([p], lr=0.01, momentum=0.9, nesterov=True)
-sin_example.run_example(p, gd, batch_data_loader);
-```
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-## Adaptive gradient: Adagrad
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$\begin{align}
-v_{t+1}& =\nabla_\theta L(\theta^t)\\
-G_{t+1}&=G_{t}+\left(\nabla_\theta L(\theta_t)\right)^2\\
-\theta_{t+1}& = \theta_{t}-\frac{\eta}{\sqrt{G_{t+1}+\epsilon}} v_{t+1}
-\end{align}
-$$
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([-8, 3])
-p.requires_grad_(True);
-gd = torch.optim.Adagrad([p], lr=2.0)
-ravine_example.run_example(p, gd,100,1.0 );
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([3.4,-0.4])
-p.requires_grad_(True)
-gd = torch.optim.Adagrad([p], lr=.1)
-sin_example.run_example(p, gd, batch_data_loader);
-```
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-## RMSProp
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$\begin{align}
-v_{t+1}& =\nabla_\theta L(\theta_t)\\
-E[g^2]_{t+1}&=\gamma E[g^2]_t+(1-\gamma)\left(\nabla_\theta L(\theta_t)\right)^2\\
-\theta_{t+1}& = \theta_{t}-\frac{\eta}{\sqrt{E[g^2]_{t+1}+\epsilon}} v_{t+1}
-\end{align}
-$$
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([-8, 3])
-p.requires_grad_(True);
-gd = torch.optim.RMSprop([p], lr=1.0)
-ravine_example.run_example(p, gd,100,1.0 );
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([3.2,-0.4])
-p.requires_grad_(True)
-gd = torch.optim.RMSprop([p], lr=0.1)
-sin_example.run_example(p, gd, batch_data_loader);
-```
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-## Adadelta
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
-Units do not match! 
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$\begin{align}
-v^{t+1}& =\nabla_\theta L(\theta^t)\\
-E[g^2]_{t+1}&=\gamma E[g^2]_t+(1-\gamma)\left(\nabla_\theta L(\theta^t)\right)^2\\
-E[\Delta\theta^2]_t & = \gamma E[\Delta\theta]_{t-1} +(1-\gamma)\Delta\theta^2_t\\
-\theta_{t+1}& = \theta_{t}-\frac{\eta E[\Delta\theta^2]_t}{\sqrt{E[g^2]_{t+1}+\epsilon}} v_{t+1}
-\end{align}
-$$
-<!-- #endregion -->
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([-8, 3])
-p.requires_grad_(True);
-gd = torch.optim.Adadelta([p], lr=4.0)
-ravine_example.run_example(p, gd,2100,1.0 );
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-p = torch.FloatTensor([3.2,-0.4])
-p.requires_grad_(True)
-gd = torch.optim.Adadelta([p], lr=4.0)
-sin_example.run_example(p, gd, batch_data_loader);
-```
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Adam: Adaptive Momentum Estimation 
+## Adam: Adaptive Momentum Estimation 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 $$\begin{split}
+g_t &= \nabla_\theta L(\theta_t)\\
 m_t &= \beta_1 m_{t-1} + (1-\beta_1) g_t \\
 v_t &= \beta_2 v_{t-1} + (1-\beta_2) g^2_t \\
 \end{split}
@@ -352,17 +238,20 @@ $$\theta_{t+1} = \theta_t -\frac{\eta}{\sqrt{v}+\epsilon}m_t $$
 ```{python slideshow={'slide_type': 'slide'}}
 p = torch.FloatTensor([-8, 3])
 p.requires_grad_(True);
-gd = torch.optim.Adam([p], lr=0.1)
+gd = torch.optim.Adam([p], lr=0.2, betas=(0.2, 0.1))
+ravine_example.run_example(p, gd,2100,1.0 );
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+p = torch.FloatTensor([-8, 0])
+p.requires_grad_(True);
+gd = torch.optim.Adam([p], lr=0.1, betas=(0.1, 0.2))
 ravine_example.run_example(p, gd,2100,1.0 );
 ```
 
 ```{python slideshow={'slide_type': 'slide'}}
 p = torch.FloatTensor([3.2,-0.4])
 p.requires_grad_(True)
-gd = torch.optim.Adam([p], lr=0.1)
+gd = torch.optim.Adam([p], lr=0.1, betas = (.1,.2 ))
 sin_example.run_example(p, gd, batch_data_loader);
-```
-
-```{python}
-
 ```

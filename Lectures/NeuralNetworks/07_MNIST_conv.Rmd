@@ -6,14 +6,14 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.13.8
+      jupytext_version: 1.14.5
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %load_ext autoreload
 # %autoreload 2
 ```
@@ -29,16 +29,16 @@ plt.rcParams["figure.figsize"] = [12,8]
 plt.rcParams["animation.html"] = "jshtml"
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 from IPython.display import Markdown as md
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 import sys
 sys.path.append('../../')
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 from mchlearn import tensor_plot
 from matplotlib.animation import FuncAnimation
 ```
@@ -47,7 +47,7 @@ from matplotlib.animation import FuncAnimation
 # Convolutional neural networks
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}} -->
 Here we revisit  the "Hello World!" of machine learning: ["The MNIST Database of hanwritten digits"](http://yann.lecun.com/exdb/mnist/). This seem appropriate as this is the set for which the convolutional networks were actually proposed in [Backpropagation Applied to Handwritten Zip Code Recognition ](https://direct.mit.edu/neco/article/1/4/541/5515/Backpropagation-Applied-to-Handwritten-Zip-Code).
 <!-- #endregion -->
 
@@ -59,12 +59,12 @@ Here we revisit  the "Hello World!" of machine learning: ["The MNIST Database of
 This dataset bundled in many machine learning libraries and PyTorch is no exception. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 train_data = torchvision.datasets.MNIST('./data/mnist', train=True, download=True)
 test_data  = torchvision.datasets.MNIST('./data/mnist', train=False, download=True)
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 train_features   = train_data.data.to(dtype=torch.float32)
 train_labels = train_data.targets
 ```
@@ -73,7 +73,7 @@ train_labels = train_data.targets
 The data consists of 28 by 28 pixels 8bit grayscale images of handwritten digits, the labels are integers denoting corresponding digits:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 train_data.data.shape
 ```
 
@@ -89,7 +89,7 @@ for i in range(8):
 For the purpose of this notebook I will use only a subset of data. This will make the training of the network much quicker. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 n_samples = 12000
 ```
 
@@ -97,13 +97,13 @@ n_samples = 12000
 I will also rescale the grayscale values to lie in the interval $[0,1)$. The 2D convolutional layers expect the data as the 4-dimensional tensor $(N,C,H,W)$ where $N$ stands for batch dimension, $C$ for channels adn $H$ and $W$ for height and width respectively so I will reshape the data accordingly: 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}}
 dataset = torch.utils.data.TensorDataset( 
     (train_features[:n_samples]/256.0).view(-1,1,28,28),
     train_labels[:n_samples])
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}} -->
 I will split the  training data into actuall training set and the validation set
 <!-- #endregion -->
 
@@ -120,7 +120,7 @@ validation_loader = torch.utils.data.DataLoader(validation_dataset,
                                            shuffle = True)
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 test_features   = test_data.data.to(dtype=torch.float32)
 test_labels = test_data.targets
 test_dataset = torch.utils.data.TensorDataset(
@@ -161,7 +161,7 @@ with torch.no_grad():
 Tensor `pred` contains the predicted probabilities for each  digit for each input:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 pred[:4]
 ```
 
@@ -184,11 +184,11 @@ def model_accuracy(model, dataset):
 accuracy(pred, train_dataset[:][1])
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 optim = torch.optim.Adam(model.parameters(), lr=0.001)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 # %%time
 ce_loss = torch.nn.CrossEntropyLoss()
 for e in range(5):
@@ -209,29 +209,30 @@ with torch.no_grad():
     print(model_accuracy(model, test_dataset))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Convolutional layer
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 ```python
-nn.Conv2d(in_channels=1,out_channels=32,kernel_size=3, stride=1, padding=0)
+nn.Conv2d(in_channels=1,out_channels=32,
+          kernel_size=3, stride=1, padding=0)
 ```
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 ####  Sparsity (locality)
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 #### Weight sharing
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ### Cross correlation
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 $$\begin{array}{cccccc}
 O_{i,j} = \displaystyle \sum_{k,l=0}^{K-1} & w_{k,l}&\times &I_{i+k,j+l}&+&b_{c}&,\qquad i = 0,\ldots,H_i, \;j = 0,\ldots,W_i \\
 & \uparrow & &&&\uparrow&\\
@@ -240,7 +241,7 @@ O_{i,j} = \displaystyle \sum_{k,l=0}^{K-1} & w_{k,l}&\times &I_{i+k,j+l}&+&b_{c}
 $$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 fig, ax = plt.subplots(figsize=(16,8))
 plt.axis("off")
@@ -254,15 +255,15 @@ tensor_plot.draw_kernel(ax, 1,0,0,  left=13, bottom=3)
 ax.arrow(3.5,3.5,10,0,head_width=0.25, head_starts_at_zero=False, length_includes_head=True, shape='full', overhang=1)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 fig
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 from itertools import product
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 kernel_left = None
 kernel_right = None
@@ -316,15 +317,15 @@ def update(frame, *fargs):
 anim = FuncAnimation(fig, update, frames=product(range(3), range(3)), init_func=init, blit=False, repeat=False, fargs=({'first':True},), interval=1000)
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 anim 
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ### Padding
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 kernel_left = None
 kernel_right = None
@@ -378,32 +379,32 @@ def update(frame, *fargs):
 anim = FuncAnimation(fig, update, frames=product(range(0,5), range(0,5)), init_func=init, blit=False, repeat=False, fargs=({'first':True},), interval=1000)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 anim
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 t = torch.arange(9).to(dtype=torch.float).reshape(1,1,3,3)
 print(t)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'constant', value=0) )
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'reflect') )
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'replicate') )
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'circular') )
 ```
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 kernel_left = None
 kernel_right = None
@@ -457,15 +458,15 @@ def update(frame, *fargs):
 anim = FuncAnimation(fig, update, frames=product(range(0,6), range(0,6)), init_func=init, blit=False, repeat=False, fargs=({'first':True},), interval=1000)
 ```
 
-```{python slideshow={'slide_type': 'slide'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 anim 
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Stride
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 kernel_left = None
 kernel_right = None
@@ -519,41 +520,44 @@ def update(frame, *fargs):
 anim = FuncAnimation(fig, update, frames=product(range(0,6,2), range(0,6,2)), init_func=init, blit=False, repeat=False, fargs=({'first':True},), interval=1000)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 anim 
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Input channels
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
-$$O_{i,j} =\displaystyle \sum_{k,l=0}^{K-1} w_{c',k,l}\times I_{c',-P_i+i+k, -P_i+j+l}+b,\qquad i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+$$O_{i,j} =\displaystyle \sum_{k,l=0}^{K-1} w_{c,k,l}\times I_{c,-P_i+i+k, -P_i+j+l}+b$$
+
+$$i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Output chanels -- Filters
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 $$(N_i,C_i,H_i,W_i)\longrightarrow (N_i,C_o,H_o,W_o)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
-$$O_{c,i,j} = \sum_{c'=0}^{C_i-1} \displaystyle \sum_{k,l=0}^{K-1} w_{c,c'k,l}I_{c',-P_i+i+k, -P_i+j+l}+b_{c},\qquad c=0,\ldots C_o-1,\;i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+$$O_{c,i,j} = \sum_{c^\prime=0}^{C_i-1} \displaystyle \sum_{k,l=0}^{K-1} w_{c,c^\prime k,l}I_{c^\prime,-P_i+i+k, -P_i+j+l}+b_{c}$$
+$$\qquad c=0,\ldots C_o-1,\;i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 # Pooling layers
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 ```python
 nn.MaxPool2d(2,2),#13x13
 ```
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, tags=c()}
+```{python slideshow={'slide_type': 'skip'}}
 # %%capture
 fig, ax = plt.subplots(figsize=(16,8))
 plt.axis("off")
@@ -566,72 +570,73 @@ tensor_plot.draw_grid_with_padding(ax, 2,2, padding=0, left=13, bottom=3)
 tensor_plot.draw_kernel(ax, 1,0,0,  left=13, bottom=3)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 fig
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ### Max pooling
 <!-- #endregion -->
 
 $$o = \max_{i,j} x_{i,j}$$
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'slide'}}
 t = torch.randint(0,5,(5,5)).to(dtype=torch.float).reshape(1,1,5,5)
 print(t)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.max_pool2d(t, kernel_size=2))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.max_pool2d(t, kernel_size=2, stride=1))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ### Average pooling
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 $$o = \frac{1}{K_w\times K_h}\sum_{i,j} x_{i,j} $$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(t)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.avg_pool2d(t, kernel_size=2))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Power average pooling
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 $$o = \sqrt[\leftroot{20}\uproot{2}\textstyle p]{\sum_{i,j}x_{i,j}^p}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(t)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.lp_pool2d(t, kernel_size=2, norm_type=1))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, tags=c()}
+```{python slideshow={'slide_type': 'fragment'}}
 print(torch.nn.functional.lp_pool2d(t, kernel_size=2, norm_type=50))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "tags": []} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}} -->
 ## Classifier
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 ```python
-nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1, padding=0),#3x3
+nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, 
+          stride=1, padding=0),#3x3
 nn.Flatten(),
 nn.Linear(in_features=9*64, out_features=64),
 nn.ReLU(),
@@ -668,16 +673,11 @@ Image(filename='vgg16.png')
 
 ```{python slideshow={'slide_type': 'slide'}}
 import torchvision.models as models
-
 vgg16 = models.vgg16()
-```
-
-```{python slideshow={'slide_type': 'fragment'}}
 n_param = 0
 for p in vgg16.parameters():
     print(p.shape, p.nelement())
     n_param+= p.nelement()
-
 ```
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -709,5 +709,5 @@ for name, obj in  inspect.getmembers(models):
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}}
-vgg16 = models.vgg16(pretrained=True)
+vgg16 = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
 ```

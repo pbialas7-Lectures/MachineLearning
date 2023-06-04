@@ -1,0 +1,127 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.14.5
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+# Counterfeit detection
+<!-- #endregion -->
+
+The task in this assignment is to detect the  counterfeit banknotes. The data set is based on [banknote authentication Data Set ](https://archive.ics.uci.edu/ml/datasets/banknote+authentication#) from UCI Machine Learning repository. The first three columns denote different parameters obtained from the photographs of the banknotes and last colum provides the label. Frankly as the dataset does not have any description I don't know  which labels corresponds to real and which to counterfeited banknotes. let's assume that label one (positive) denotes the clounterfeits. The set  [banknote_authentication.csv](./data/banknote_authentication.csv) can be found in the `data`  directory.
+
+```{python}
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+import scipy.stats as st
+```
+
+```{python}
+from sklearn.metrics import classification_report, ConfusionMatrixDisplay
+```
+
+```{python}
+import  matplotlib.pyplot as plt
+plt.rcParams['figure.figsize']=(8,8)
+```
+
+Please insert you  firstname  and name below
+
+```{python}
+from  sklearn.model_selection import train_test_split
+seed = 31287
+```
+
+```{python}
+data = pd.read_csv('data/banknotes_data.csv')
+```
+
+```{python}
+data.head()
+```
+
+```{python tags=c("skip")}
+data.describe()
+```
+
+```{python tags=c("skip")}
+data.info()
+```
+
+```{python}
+data_train, data_test = train_test_split(data, test_size=0.2, shuffle=True, stratify=data.loc[:,'counterfeit'], random_state=seed)
+```
+
+```{python}
+data_train
+```
+
+```{python}
+lbls_train = data_train['counterfeit']
+lbls_test = data_test['counterfeit']
+```
+
+```{python}
+fig, ax = plt.subplots(1,4, figsize=(22,5))
+for i in range(4):
+    ax[i].hist(data_train[lbls_train==0].iloc[:,i], bins=32, histtype='step', color='blue')
+    ax[i].hist(data_train[lbls_train==1].iloc[:,i], bins=32, histtype='step', color='red')
+    ax[i].hist(data_train[lbls_train==0].iloc[:,i], bins=32, histtype='bar', color='lightblue', alpha=0.25)
+    ax[i].hist(data_train[lbls_train==1].iloc[:,i], bins=32, histtype='bar', color='orange', alpha =0.25)
+```
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+# Problem 1
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+Train a neural network classifier to predict counterfeit banknotes. Use the features `a0` and `a3`. 
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+import torch
+import torch.nn as tnn
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+features= [0, 3]
+nf=len(features)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+features_train = torch.from_numpy(data_train.values[:,features]).to(dtype=torch.float32)
+labels_train = torch.from_numpy(data_train.values[:,4:5]).to(dtype=torch.float32)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+features_test = torch.from_numpy(data_test.values[:,features]).to(dtype=torch.float32)
+labels_test = torch.from_numpy(data_test.values[:,4:5]).to(dtype=torch.float32)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+model = tnn.Sequential(tnn.Linear(in_features=nf, out_features=1), tnn.Sigmoid())
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+loss_fn = tnn.BCELoss()
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+optimizer = torch.optim.SGD(model.parameters(),lr=10.0)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+with torch.no_grad():
+    pred =  model(features_train)
+    acc = torch.mean(0.0+ ((pred > 0.5)== (labels_train>0.5)))
+acc    
+```
