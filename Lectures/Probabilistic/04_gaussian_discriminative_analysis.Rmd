@@ -5,23 +5,23 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.14.5
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}, tags=c("skip")}
+```{python slideshow={'slide_type': 'skip'}, tags=c("skip"), editable=TRUE}
 # %load_ext autoreload
 # %autoreload 2
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 # Gaussian Discriminative Analysis
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 In here we continue with the probabilistic methods of Machine Learning. Please recall that we are trying the estimate the conditional probability
 <!-- #endregion -->
 
@@ -402,14 +402,14 @@ mu_M, cov_M = gaussian_stats(train_data_M[['Height', 'Weight']])
 By default ellipsed are drawn with a three $\sigma$ radius
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 fig, ax = hw_plot()
 hw_scatter(fig, ax, train_data_F, train_data_M)
-confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
-confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color);
+confidence_ellipse(mu_F.values, cov_F, ax, edgecolor = f_color)
+confidence_ellipse(mu_M.values, cov_M, ax, edgecolor = m_color);
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Fitting the class priors
 <!-- #endregion -->
 
@@ -523,7 +523,7 @@ def add_roc_curve(fig, ax, y_true, y_score, name):
 DataFrame is used only for "pretty printing". The true labels correspond to rows and predicted to columns. The normalisation set to  'true' mean that the numbers in each row add up to one. So the matrix above corresponds to
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig, ax = roc_plot()
 add_roc_curve(fig, ax, test_data.Gender=='Female', test_predicted_proba_gda, "GDA")
 ax.legend(title='AUC');
@@ -554,25 +554,30 @@ hs = np.linspace(1.3, 2.1,100)
 ws = np.linspace(30,120, 100)
 ```
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 To visualize this boundary I will draw the countour line(s) of $P(F|h,w)$. This  is slightly technical  and I have provided `grid` function that generates the data
 suitable to be used directly in the matplotlib `contour`  and `contourf` functions.  Those functions can be found in the `plotting` module in the `mchlearn` package. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = hw_plot()
 hw_scatter(fig, ax, train_data_F, train_data_M)
-confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
-confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color)
+confidence_ellipse(mu_F.values, cov_F, ax, edgecolor = f_color)
+confidence_ellipse(mu_M.values, cov_M, ax, edgecolor = m_color)
 cs = ax.contour(*grid(hs,ws,prob_F_cond_HW), [0.25, 0.5, 0.75], colors=['coral','red', 'coral']);
 ax.clabel(cs);
+plt.close()
 ```
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+fig
+```
+
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 I have included boundaries for three different thresholds. Here is the same picture but using the histogram instead of scatter plot
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = hw_plot()
 hw_hexbin(fig,ax, train_data)
 ax.set_xlim(1.4,2.0)
@@ -580,9 +585,14 @@ confidence_ellipse(mu_F, cov_F, ax, edgecolor = f_color)
 confidence_ellipse(mu_M, cov_M, ax, edgecolor = m_color)
 cs = ax.contour(*grid(hs,ws,prob_F_cond_HW), [0.25, 0.5, 0.75], colors=['coral','red', 'coral']);
 ax.clabel(cs);
+plt.close();
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+fig
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Quadratic Discriminant Analysis
 <!-- #endregion -->
 
@@ -654,11 +664,14 @@ Plugging in the multivariate gaussian distribution we obtain equation
 
 <!-- #region slideshow={"slide_type": "slide"} -->
 $$
-\frac{\pi_c}{(2\pi)^{D/2}|\b\Sigma_c|^{1/2}}
+\begin{split}
+\frac{\pi_c}{(2\pi)^{D/2}|\b\Sigma_c|^{1/2}}&
 e^{\displaystyle-\frac{1}{2}\left(\mathbf{x}-\b\mu_c\right)^T{\b\Sigma_c}^{-1}\left(\mathbf{x}-\b\mu_c\right)}
-=
+\\
+&=
 \frac{\pi_{c'}}{(2\pi)^{D/2}|\b\Sigma_{c'}|^{1/2}}
 e^{\displaystyle-\frac{1}{2}\left(\mathbf{x}-\b\mu_{c'}\right)^T{\b\Sigma_{c'}}^{-1}\left(\mathbf{x}-\b\mu_{c'}\right)}
+\end{split}
 $$
 <!-- #endregion -->
 
@@ -667,13 +680,15 @@ Taking the logarithm of both sides and droping common terms we obtain
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "fragment"} -->
-$$
+$$\begin{split}
 \log\pi_c-
-\frac{1}{2}\log|\b\Sigma_c|^{1/2}
--\frac{1}{2}\left(\mathbf{x}-\b\mu_c\right)^T{\b\Sigma_c}^{-1}\left(\mathbf{x}-\b\mu_c\right)
-=
+&\frac{1}{2}\log|\b\Sigma_c|^{1/2}
+-\frac{1}{2}\left(\mathbf{x}-\b\mu_c\right)^T{\b\Sigma_c}^{-1}\left(\mathbf{x}-\b\mu_c\right)\\
+&=
 \log\pi_{c'}-\frac{1}{2}\log |\b\Sigma_{c'}|^{1/2}
--\frac{1}{2}\left(\mathbf{x}-\b\mu_{c'}\right)^T{\b\Sigma_{c'}}^{-1}\left(\mathbf{x}-\b\mu_{c'}\right)$$
+-\frac{1}{2}\left(\mathbf{x}-\b\mu_{c'}\right)^T{\b\Sigma_{c'}}^{-1}\left(\mathbf{x}-\b\mu_{c'}\right)
+\end{split}
+$$
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "notes"} -->
@@ -684,7 +699,7 @@ Which is a quadratic equation in $\b x$.  So the final region is an intersection
 ## Naive Bayes
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 In our case we had ample data to fit the distributions. Each distribution requires five parameters so we have ten parameters in  total but the training set contains few thousands examples. Moreover  the classes are balanced. However the number of parameters grows quadratically with the number of dimensions. One (brutal) way of  reducing the number of parameters is to consider only the _diagonal_ $\b\Sigma$ matrices. This mean that we treat all features as conditionally independent so this is just Naive Bayes we have already considered.  We will redo this example here but this time  with  height and weight.  Those variables  are evidently correlated, this will enable us to see more clearly what kind of approximations we are making. We will also use the functions supplied in the scikit-learn library instead of constructing the classifier "by hand".
 <!-- #endregion -->
 
@@ -732,7 +747,7 @@ ax.legend(title='AUC');
 The performance  of this classifer is not that much worse! Let's look at the fitted distributions and the decision boundary
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = hw_plot()
 hw_scatter(fig,ax,train_data_F, train_data_M)
 confidence_ellipse(nb_cls.theta_[1], np.diag(nb_cls.var_[1]), ax, edgecolor = f_color)
@@ -741,13 +756,18 @@ cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
 ax.clabel(cs_qda,[0.5], fmt="QDA");
 cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
 ax.clabel(cs_nb,[0.5], fmt="NB");
+plt.close();
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+fig
 ```
 
 <!-- #region slideshow={"slide_type": "notes"} -->
 We can see that the distributions are wide off the mark. Naive Bayes has constrained them to be ellipses parallel to the axes.  The decision boundary is also different, but it manages to separate clearly the centers of the clusters from each other. And that's where most of the samples are. This can be better seen on the histogram
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = plt.subplots()
 hw_hexbin(fig,ax, train_data, extent=(1.3,2.1,30, 120))
 confidence_ellipse(nb_cls.theta_[1], np.diag(nb_cls.var_[1]), ax, edgecolor = f_color)
@@ -756,13 +776,18 @@ cs_qda = ax.contour(*grid(hs,ws,prob_F_cond_HW),  levels=[0.5], colors=['red']);
 ax.clabel(cs_qda,[0.5], fmt="QDA");
 cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[0.5], colors=['darkviolet']);
 ax.clabel(cs_nb,[0.5], fmt="NB");
+plt.close();
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+fig
+```
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 The violet line also clearly separates the two peaks which explains not so bad performance of the classifier. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Linear Discriminative Analysis
 <!-- #endregion -->
 
@@ -817,7 +842,7 @@ ax.legend(title='AUC');
 The performance of this classifier is undistinguishable from performance of the Quadratic Discriminator.  This is because the two distributions have roughly same shape so the approximation is valid.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = hw_plot()
 hw_scatter(fig,ax, train_data_F, train_data_M)
 confidence_ellipse(nb_cls.theta_[1], lda_cls.covariance_, ax, edgecolor = f_color)
@@ -828,13 +853,18 @@ cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[
 ax.clabel(cs_nb,[0.5], fmt="NB");
 cs_lda = ax.contour(*grid(hs,ws,lambda a: lda_cls.predict_proba(a)[:,1]), [0.5], colors=['green']);
 ax.clabel(cs_lda,[0.5], fmt="LDA");
+plt.close();
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+fig
 ```
 
 <!-- #region slideshow={"slide_type": "notes"} -->
 As you can see the LDA decision boundary (that indeed is a straight line) is very close to quadratic boundary in the region of interest.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = plt.subplots()
 hw_hexbin(fig, ax, train_data, extent=(1.3, 2.1, 30, 120))
 confidence_ellipse(nb_cls.theta_[1], lda_cls.covariance_, ax, edgecolor = f_color)
@@ -845,8 +875,13 @@ cs_nb = ax.contour(*grid(hs,ws,lambda a: nb_cls.predict_proba(a)[:,1]), levels=[
 ax.clabel(cs_nb,[0.5], fmt="NB");
 cs_lda = ax.contour(*grid(hs,ws,lambda a: lda_cls.predict_proba(a)[:,1]), [0.5], colors=['green']);
 ax.clabel(cs_lda,[0.5], fmt="LDA");
+plt.close();
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+fig
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```

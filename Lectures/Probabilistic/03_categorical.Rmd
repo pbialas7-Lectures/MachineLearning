@@ -5,14 +5,14 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.14.5
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -23,11 +23,11 @@ import pandas as pd
 plt.rcParams["figure.figsize"] = [12,8]
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Training  Bayes
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 As we have shown in the previous lectures training a Bayes classifier amounts to finding the conditional probability distributions of the features $\mathbf{f}$ given the class label $c$. 
 <!-- #endregion -->
 
@@ -140,7 +140,7 @@ cars_data.info()
 ```
 
 <!-- #region slideshow={"slide_type": "skip"} -->
-Method `groupby`  divides the data frame into goups based on the value of the given colum(s)
+Method `groupby`  divides the data frame into groups based on the value of the given colum(s)
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'slide'}}
@@ -287,120 +287,130 @@ However this classifier requires the  class labels and attributes to be  integer
 from sklearn.preprocessing import  OrdinalEncoder
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 features_encoder = OrdinalEncoder(dtype='int32')
-train_encoded = features_encoder.fit_transform(cars_train)
+features_encoder.fit(cars_train)
+train_encoded = pd.DataFrame(features_encoder.transform(cars_train), columns=features_encoder.get_feature_names_out())
 ```
 
-```{python}
-features_encoder.feature_names_in_
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+np.bincount(train_encoded.iloc[:,-1])
 ```
 
-```{python}
-np.bincount(train_encoded[:,-1])
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+cnb.fit(train_encoded.iloc[:,:-1], train_encoded.iloc[:,-1])
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
-cnb.fit(train_encoded[:,:-1], train_encoded[:,-1])
-```
-
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We can view the learned probabilities of this classifier  using its `feature_log_prob` attribute:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
-np.exp( cnb.feature_log_prob_[0] )
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+features_encoder.categories_[-1]
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+pd.DataFrame(np.exp( cnb.feature_log_prob_[0], ), 
+             columns=features_encoder.categories_[0], index=features_encoder.categories_[-1]).style.set_caption(f"{features_encoder.feature_names_in_[0]}")
+```
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Comparing with our calculations we see a almost perfect agreement. Mowever we get all four probabilities in the last line like required. The two values are not zero because of smoothing. 
 <!-- #endregion -->
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 from sklearn.metrics import accuracy_score
-accuracy_score(train_encoded[:,-1], cnb.predict(train_encoded[:,0:-1]), normalize=True)
+accuracy_score(train_encoded.iloc[:,-1], cnb.predict(train_encoded.iloc[:,0:-1]), normalize=True)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 After training the classifier we can use it to  make predictions on the test set
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
-test_encoded = features_encoder.transform(cars_test)
-encoded_test_class = test_encoded[:,-1]
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+test_encoded = pd.DataFrame(features_encoder.transform(cars_test), columns=features_encoder.get_feature_names_out())
+encoded_test_class = test_encoded.iloc[:,-1]
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
-predicted_test_class = cnb.predict(test_encoded[:,:-1])
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+predicted_test_class = cnb.predict(test_encoded.iloc[:,:-1])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and test them
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.metrics import accuracy_score
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 accuracy_score(encoded_test_class, predicted_test_class, normalize=True)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Actually the classifier has a method for predicting and measuring accuracy
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
-cnb.score(test_encoded[:,:-1], encoded_test_class)
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+cnb.score(test_encoded.iloc[:,:-1], encoded_test_class)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 which unsuprisingly gives same results
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 As a last check I will look at the class distribution in the predicted and real labels. As it may happen that with unbalanced  classes  one class can be e.g. totaly misclassified without affecting accuracy. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 np.bincount(predicted_test_class.astype('int64'))
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 np.bincount(encoded_test_class.astype('int64'))
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Multiclass metrics
 <!-- #endregion -->
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 from sklearn.metrics import multilabel_confusion_matrix, confusion_matrix, ConfusionMatrixDisplay
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Confusion matrix
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 The accuracy  generalises intuitively to non-binary classification.  The confusion matrix also generalises to this case.  
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 pred = predicted_test_class
 true = encoded_test_class
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 confusion_matrix(true, pred)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true', 
                                         display_labels=features_encoder.categories_[-1]);
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Averaging 
 <!-- #endregion -->
 
@@ -542,7 +552,7 @@ recall_score(encoded_test_class, predicted_test_class, average='macro')
 and for precision
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 $$Precision_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i}$$
 <!-- #endregion -->
 
@@ -584,11 +594,15 @@ f1_score(encoded_test_class, predicted_test_class, average='macro')
 ### Weighted averaging 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 And finally the weighted averaging is like macro averaging but we  weight the average by the support of each class _i.e._ the number of labels of each class. E.g. for precision
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+$$Precision_M = \sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i} \frac{P_k}{\sum_k P_i}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 tot = 0
 den = 0
 for i in range(3):
@@ -627,6 +641,6 @@ precision_recall_fscore_support(encoded_test_class, predicted_test_class, beta =
 print(classification_report(encoded_test_class, predicted_test_class))
 ```
 
-```{python}
-
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+features_encoder.categories_
 ```

@@ -6,20 +6,20 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.14.5
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 #This ensures that the plots are displayes automatically without need to call plt.show().
 # %matplotlib inline
 fig_height = 10
@@ -64,7 +64,7 @@ $$P(C=c,D=d)$$
 Once we have it we can calculate the conditional probability directly from the definition
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$P(C=c|D=d)=\frac{P(C=c,D=d)}{P(D=d)}$$
 <!-- #endregion -->
 
@@ -76,80 +76,100 @@ $$P(C=c|D=d)=\frac{P(C=c,D=d)}{P(D=d)}$$
 In practice it is often easier to use the Bayes theorem
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$\boxed{P(C=c|D=d) = \frac{P(D=d|C)P(C=c)}{P(D=d)}= \frac{P(D=d|C=c)P(C=c)}{\sum_c P(D=d|C=c)P(C=c)}}$$ 
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+$$\boxed{P(C=c|D=d) = \frac{P(D=d|C)P(C=c)}{P(D=d)}}$$
+$$P(D=d)=\sum_c P(D=d|C=c)P(C=c)$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 In other words we are factoring the joint probability in two parts
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$P(C=c, D=d)= P(D=d|C=c)\cdot P(C=c)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 __Sampling distribution__
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
-The first factor  when viewed as the function of $d$ is called the _sampling distributions_ as it describes the distribution of samples in class $c$. Knowledge of $P(D=d|C=c)$ is the knowledge of how to generate the data. We can say we have a model of our data generation process. 
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+The first factor  
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+$$P(D=d|C=c)$$
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+when viewed as the function of $d$ is called the _sampling distributions_ as it describes the distribution of samples in class $c$. Knowledge of $P(D=d|C=c)$ is the knowledge of how to generate the data. We can say we have a model of our data generation process. 
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 __Prior__
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
-$P(C=c)$ is an  _a priori_ (prior) probability y of $C=c$ before we gather any data.  That's the knowledge we had about random variable $C$ beforehand. That  usually reflects the frequency of occurence of classes in the data. For example it may be a fraction of people that repay their loans. 
+<!-- #region {"slideshow": {"slide_type": ""}, "editable": true} -->
+$$P(C=c)$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+is an  _a priori_ (prior) probability y of $C=c$ before we gather any data.  That's the knowledge we had about random variable $C$ beforehand. That  usually reflects the frequency of occurence of classes in the data. For example it may be a fraction of people that repay their loans. 
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Bayes classifier
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 Given this probability we can construct a classifier _e.g._ by chosing the class with highest probability
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$\newcommand{\argmax}{\operatorname{argmax}}$$
-$$c = \argmax_c P(C=c|D=d)  =  \argmax_{c} \frac{P(D=d|C=c)P(C=c)}{P(D=d)}=\argmax_{C} P(D=d|C=c)P(C=c)$$
+$$\begin{split}
+c &=  \argmax_{c} \frac{P(D=d|C=c)P(C=c)}{P(D=d)}\\
+&=\argmax_{C} P(D=d|C=c)P(C=c)
+\end{split}$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 Please note that for that kind of classifier  we do not need to calculate the denominator. However in the next section we will see that having a proper probability distribution allows us to construct a whole familly of classifiers. We are not restricted to choosing the one above.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Example: Estimating sex of a person based on it's height
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 Let's consider classfication of persons as women and men based on their height. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
-In this case $D$ is the height of a person and we will denote it by $H$,  $C$ is the sex of a person and we will denote it by $S$. 
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+In this case $D$ is the height of a person and we will denote it by $H$,  $C$ is the sex of a person and we will denote it by $S$.We will be looking for the conditional probability
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "tags": ["text"]} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
+$$P(S=s|H=h)$$
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "notes"}, "tags": ["text"], "editable": true} -->
 We will assume that for each sex the height distribution is Gaussian (we will check this assumption later)
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$P(H=h|S=s) \sim  \mathcal{N}(\mu_s,\sigma_s)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 I will use $\sim$ symbol to denote that the probability on left-hand side is equal to probability density function (pmf) or probability mass function (pmf) of the distribution on the right-hand side. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 To model this we will use  `stats` module from `scipy` which we have imported at the begining of the notebook.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 pd_h_cond_F = st.norm(166,6.1)
 pd_h_cond_M = st.norm(178,7)
 ```
@@ -507,7 +527,7 @@ print("F score = {:4.2f}".format(f1_b))
 The above examples are meant to warn you about using the accuracy as a metric in case of the dataset with unbalanced classes _i.e._ sets where one class is much less frequent then the rest. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Calculating the errors of our "sex from height" classifier. 
 <!-- #endregion -->
 
@@ -516,7 +536,7 @@ In this case  we could actually calculate the desired quantities analitically bu
 As we do not have real data we will use the Monte-Carlo technique. We will start by simulating the heights of 100000 persons with equal number of women and men using the properties of the distribution objects from `scipy.stats`:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 n_samples = 100000
 h_F = pd_h_cond_F.rvs(size = n_samples//2) # rvs stands for random variates - random numbers drawn from the distribution
 h_M = pd_h_cond_M.rvs(size = n_samples//2)
@@ -637,7 +657,7 @@ Function [roc_curve](https://scikit-learn.org/stable/modules/generated/sklearn.m
 fprs, tprs, thds = roc_curve(labels, pdf_F_cond(h_FM)); 
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 def roc_plot(figsize=[fig_height,fig_height]):
     """Returns figure and axes object for plotting ROC curve
     setting aspect ration to one and labeling the axes.
@@ -649,11 +669,11 @@ def roc_plot(figsize=[fig_height,fig_height]):
     return fig,ax
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 and  returns three arrays containg false positives rates, true positives rates and thresholds which we will use to plot the curve. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = roc_plot()
 
 roc = ax.plot(fprs,tprs, color='blue');
@@ -669,9 +689,14 @@ ax.scatter([0],[1],s = 30, edgecolor='blue', facecolor='white', zorder=5)
 ax.grid()
 
 ax.annotate("Perfect classifier",(0.01,0.99),(0.05, 0.92), arrowprops = {'arrowstyle':'-> '}, fontsize=12);
+plt.close();
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+fig
+```
+
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 As we can see we must compromise, the  perfect classfier corresponds to point (0,1) and does not lie on our curve. We can increase TPR but only by increasing FPR. 
 
 In extreme cases we may clasify everybody as men. Then FPR = 0 but also TPR = 0. Other extreme would be to classify everybody as women. Then we have TPR = 1 but also FPR = 1. So the ROC curve always start at (0,0) and ends at (1,1). 
@@ -691,15 +716,20 @@ So how do we chose a point on ROC curve ? That depends on our goals, we need som
 From the definitions: 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$FP +FN = FPR\cdot N + FNR\cdot P = FPR\cdot N+ (1-TPR)\cdot P \propto FPR\cdot P(N) + (1-TPR)\cdot P(P) $$ 
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+$$\begin{split}
+FP +FN &= FPR\cdot N + FNR\cdot P \\
+&= FPR\cdot N+ (1-TPR)\cdot P \\
+&\propto FPR\cdot P(N) + (1-TPR)\cdot P(P) 
+\end{split}
+$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Please remember that positives are women and negatives are men:) The above formula translates into Python
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 errs = fprs*0.5+(1-tprs)*0.5
 ```
 
@@ -707,7 +737,7 @@ errs = fprs*0.5+(1-tprs)*0.5
 We look for the index containing the minimal value which can be used to access corresponding threshold value
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 imin = np.argmin(errs)
 print(imin, thds[imin])
 ```
@@ -823,7 +853,7 @@ which is resonably close to our value. The agreement is not perfect because our 
 ### AUC score
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 As we have learned a probabilistic classifier actually represents a whole familly of classifiers that is parametrized by the classification threshold and can be visualised by the ROC curve. It would be convenient to be able to summarise the performance of this familly with a single number. This can be achieved with _area under the curve_  (AUC) score. As the name implies this is the area under the ROC curve. We can use `roc_auc_score` function from scikit-learn to calculate it. This function takes same arguments as `roc_curve`
 <!-- #endregion -->
 
@@ -831,7 +861,7 @@ As we have learned a probabilistic classifier actually represents a whole famill
 auc = roc_auc_score(labels, pdf_F_cond(h_FM))
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = roc_plot()
 roc = ax.plot(fprs,tprs);
 ax.fill_between(fprs,tprs,alpha=0.5);
@@ -847,7 +877,7 @@ ax.text(0.7, 0.3, "AUC = %3.2f"%(auc,), fontsize=16 );
 plt.close()
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig
 ```
 
@@ -877,6 +907,6 @@ so learning amounts to estimating  this distribution from the data.
 In our case we just took the numbers provided by the Central Statistical Office and assumed (!) that the underlying distribution was normal. Actually this is not true. What I did was to take the data for persons in the age group 20-29 years. Actually the mean and the stadard deviation depends on the age group  droping _e.g._ to 174cm for men in age group 50-59 years. That means that the overall distribution in  the male population cannot be normal. It could be however a good (or good enough approximation). This is impossible to check without the actual data.  Unfotunately I do not have the access to the original data on which those measurments were based. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 The only data I could find was [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height). This data set does not contain any description but use of inches and pounds suggests an american or english origin. The data consists of 10000 points each specifying sex, height and weight of one person. I will use this dataset  to estimate the parameters of the $P(H=h|S=s)$ distributions. This will be the subject of teh next classification_naive_bayes  notebook.  
 <!-- #endregion -->

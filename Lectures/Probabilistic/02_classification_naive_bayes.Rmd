@@ -5,14 +5,14 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.14.5
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 # Multi-features classification and  Naive Bayes
 <!-- #endregion -->
 
@@ -32,7 +32,7 @@ import sklearn
 plt.rcParams["figure.figsize"] = [12,8]
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Height & weight data set
 <!-- #endregion -->
 
@@ -468,11 +468,24 @@ $$\sigma^2 = s^2$$
 ### Classifier
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
-The classifier can be now constructed in the same way as in previous lecture. To make this notebook self contained I will repeat those calculations but wrap them up in couple of functions. 
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+The classifier can be now constructed in the same way as in previous lecture.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+<!-- #region editable=true slideshow={"slide_type": "fragment"} -->
+$$P(sex=F|height=h)
+=\frac{P(height=h|sex=F)P(sex=F)}{P(H=h)}
+$$
+$$
+P(H=h)={P(height=h|sex=F)P(F)+P(height=h|sex=M)P(M)}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+ To make this notebook self contained I will repeat those calculations but wrap them up in couple of functions. 
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 def make_pdf_P_cond(labels, data):
     """Takes labels (0,1) and a single feature and returns the conditional 
     probability distribution function of the   positive label given the feature assuming
@@ -498,7 +511,7 @@ def make_pdf_P_cond(labels, data):
 pdf_F_cond_h  = make_pdf_P_cond(train_data.Gender=='Female', train_data.Height)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig, ax = plt.subplots()
 hs =np.linspace(1.3, 2.1,100)
 ax.plot(hs, pdf_F_cond_h(hs));
@@ -837,7 +850,7 @@ $$P(X_1=x_1,\ldots,X_k=k_k|C=c)$$
 In Naive Bayes we __assume__ that those features are independent conditionned on class random variable $C$
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
 $$P(X_1=x_1,\ldots,X_k=x_k|C=c)=P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c)$$ 
 <!-- #endregion -->
 
@@ -845,21 +858,36 @@ $$P(X_1=x_1,\ldots,X_k=x_k|C=c)=P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c)$$
 and so 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
-$$P(C=c|X_1=x_1,\ldots,X_k=x_k)= \frac{P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)}{\sum_c P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)}$$ 
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+$$\begin{split}P(C=c&|X_1=x_1,\ldots,X_k=x_k)= \frac{P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)}{P(X_1=x_1,\ldots,X_k=x_k)}
+\end{split}$$ 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+$$P(X_1=x_1,\ldots,X_k=x_k)=\sum_c P(X_1=x_1|C=c)\cdots P(X_k=x_k|C=c) P(C=c)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 In our example this translates to (I have used $B$ and $b$ to denote BMI random variable and its value)
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
-$$P(S=f|H=h, B = b) = \frac{P(H=h|S=f)P(B=b|S=f)P(S=f)}
-{P(H=h|S=f)P(B=b|S=f)P(S=f)+
-P(H=h|S=m)P(B=b|S=m)P(S=m)}$$
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+$$\begin{split}
+P(S=f&|H=h, B = b) = \frac{P(H=h|S=f)P(B=b|S=f)P(S=f)}
+{P(H=h,B=b)}
+\end{split}$$
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": ""} editable=true -->
+$$\begin{split}
+P&(H=h,B=b)\\
+&=P(H=h|S=f)P(B=b|S=f)P(S=f)+
+P(H=h|S=m)P(B=b|S=m)P(S=m)
+\end{split}
+$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We know that the height distribution for each sex can be approximated as normal. We have to check if this is also true for BMI.
 <!-- #endregion -->
 
@@ -933,6 +961,6 @@ ax.text(0.4,0.8,"AUC = {:.3f}\nAUC NB = {:.3f}".format(auc, nb_auc))
 ax.legend();
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 As we can see adding weight  feature in form of the BMI substantially increased the quality of our classifier. 
 <!-- #endregion -->
