@@ -262,11 +262,11 @@ How does this probability change when the _a priori_ probabilities are not equal
 #### Answer
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 This is not necessary but I will  define a function that creates a desired probability distribution:
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'slide'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'slide'}, jupyter={'source_hidden': True}}
 def make_pdf_F_cond_h(p_F):
     p_M = 1-p_F
     def pdf(h):
@@ -275,15 +275,15 @@ def make_pdf_F_cond_h(p_F):
     return pdf
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}, "jupyter": {"source_hidden": true}} -->
 This function returns another function so it is an example of [_higher order function_](https://en.wikipedia.org/wiki/Higher-order_function). The returned function is actually a [_closure_](https://simple.wikipedia.org/wiki/Closure_(computer_science)) as it remembers (closes over) the value of ```p_F```. 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'slide'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'slide'}, jupyter={'source_hidden': True}}
 pdf_F_cond_fac = make_pdf_F_cond_h(0.25)
 ```
 
-```{python tags=c("answer")}
+```{python tags=c("answer"), jupyter={'source_hidden': True}}
 hs = np.linspace(120,215,400)
 plt.plot(hs,pdf_F_cond(hs), label='P(F)=1/2');
 plt.plot(hs,pdf_F_cond_fac(hs), label='P(F)=1/4');
@@ -291,13 +291,13 @@ plt.axhline(0.5, linewidth=1, c='green');
 plt.legend();
 ```
 
-```{python tags=c("answer")}
+```{python tags=c("answer"), jupyter={'source_hidden': True}}
 from scipy.optimize import fsolve
 threshold_fac = fsolve(lambda h: pdf_F_cond_fac(h)-0.5, 160)
 print(f"{threshold_fac.item():5.1f}cm")
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}, "jupyter": {"source_hidden": true}} -->
 As the women are now more rare  the treshold is now considerably lower. In extreme case if $P(S=f)=0$, think _e.g._ about all-boy's schools, then whathever  the height of the person, it has to be a man and treshold would be zero. 
 <!-- #endregion -->
 
@@ -415,7 +415,7 @@ Calculate the accuracy and precision and F1 score of the test .
 __Answer__
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 We can rewrite accuracy as 
 $$\frac{TP+TN}{P+N} = \frac{TPR\cdot P +TN\cdot N}{P+N} = \frac{TPR\cdot P }{P+N}+  \frac{TN\cdot N}{P+N} = TPR\cdot P(P)+TNR \cdot P(N)$$
 
@@ -424,7 +424,7 @@ We know that
 $$TPR=0.8,\quad P(P)=0.004,\quad P(N)=0.996,\quad TNR=(1-FPR)=0.9$$ 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 TPR = 0.8
 FPR =0.1
 PP = 0.004
@@ -432,16 +432,16 @@ PN = 1-PP
 TNR = (1-FPR) 
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 Giving finaly 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 accuracy =  TPR *PP +TNR *PN
 print("Accuracy = {:.4f}".format(accuracy))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 Precision can be rewritten as
 
 $$\frac{TP}{TP+FP}=\frac{TPR\cdot P(P)}{TPR\cdot P(P)+FPR\cdot P(N)}$$ 
@@ -450,22 +450,22 @@ After inserting number we obtain.
 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 precision = TPR*PP/(TPR*PP +FPR*PN)
 print("Precision = {:.4f}".format(precision))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 This is not a coincidence that we have obtained same value as in Base Rate Fallacy problem in the probability notebook. Precision is exactly the conditional probability of being a true positive given that the test outcome is positive. 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 $$F1 = \frac{2\cdot TP}{TP+FP+P} =  \frac{2\cdot TPR\cdot P}{TPR\cdot P+FPR\cdot N+ P}
 =   \frac{2\cdot TPR\cdot P(P)}{TPR\cdot P(P)+FPR\cdot P(N)+P(P)}
 $$
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 2*TPR*PP/(TPR*PP + FPR*PN+PP)
 ```
 
@@ -478,15 +478,15 @@ Are they correct? Calculate the TPR, FPR and precision and F1 score  for this te
 __Answer__
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 For this test we have 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 $$TPR=0.0\quad \text{and }\quad FPR=0.0$$
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 TPR_b = 0.0
 FPR_b = 0.0
 TNR_b = 1-FPR_b
@@ -497,28 +497,28 @@ print(TNR_b)
 For accuracy this gives:
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 accuracy = TPR_b*PP + TNR_b*PN
 print("Accuracy = {:.4f}".format(accuracy))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 Precision 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 $$\frac{0}{0+0}$$
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 however is not well defined. By convention we can set it to zero in this case. 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
 As for the $F_1$ it actually has a well defined value
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
 f1_b = 2*TPR_b*PP/(TPR_b*PP + FPR_b*PN+PP)
 print("F score = {:4.2f}".format(f1_b))
 ```

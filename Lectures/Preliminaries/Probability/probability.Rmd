@@ -207,11 +207,11 @@ $$P(S\setminus A)= 1-P(A)\text{ where } S\setminus A = \{s\in S: s\notin A\}$$
 __Answer__
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 It follows directly from the second and third axiom after noting that
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "slide"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "slide"} jupyter={"source_hidden": true} -->
 $$(S\setminus A) \cup A = S \text{ and } (S\setminus A) \cap A = \varnothing$$
 <!-- #endregion -->
 
@@ -544,27 +544,27 @@ Your are tested positive, what are the chances you have the disease?
 #### Answer
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 What we need is the  probability that we are ill on condition that we have been tested positive:
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} tags=["answer"] editable=true -->
+<!-- #region slideshow={"slide_type": "slide"} tags=["answer"] editable=true jupyter={"source_hidden": true} -->
 $$P(ill|P)= \frac{P(P|ill)P(ill)}{P(P)}$$
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 The probability of being ill and tested positive is 
 <!-- #endregion -->
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}}
+```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
 p_ill_cond_p = 0.8  
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 The probability of being tested positive is
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "fragment"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "fragment"} jupyter={"source_hidden": true} -->
 $$P(P)=P(P|ill)P(ill)+P(P|\neg ill)P(\neg ill)$$
 <!-- #endregion -->
 
@@ -572,20 +572,20 @@ $$P(P)=P(P|ill)P(ill)+P(P|\neg ill)P(\neg ill)$$
 p_ill = 0.004
 ```
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}}
+```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
 p_p = 0.8*p_ill + 0.1*(1-p_ill)
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 and finally 
 <!-- #endregion -->
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}}
+```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
 p_ill_cond_p = p_ill_cond_p*p_ill/p_p
 print("{:4.1f}%".format(100*p_ill_cond_p))
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
 So there is no cause to despair yet :) 
 <!-- #endregion -->
 

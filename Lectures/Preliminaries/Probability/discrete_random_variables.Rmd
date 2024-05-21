@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.11.1
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3
     language: python
@@ -106,15 +106,15 @@ Show that
 
 $$E_{X\times Y}[a X + b  Y]= a E_X[X] + b E_Y[Y]\quad\text{where }a,b\text{ are constants}$$
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 $$E_{X\times Y}[a X + b  Y]=\sum_{x,y}\left(a x + b y\right) P(X=x, Y=y) = a \sum_{x,y} x  P(X=x, Y=y)+b \sum_{x,y}  y P(X=x, Y=y) $$
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 $$a \sum_{x,y} x  P(X=x, Y=y) = a\sum_x  x \sum_y P(X=x, Y=y)= a\sum_x x P(X=x) = a E[X]$$
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 and same for other term.
 <!-- #endregion -->
 
@@ -132,15 +132,15 @@ $$\operatorname{var}(X) = E[X^2]-E[X]^2$$
 
 __Answer__
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 $$\operatorname{var}(X) = E[(X-E[X])^2] = E\left[X^2-2 E[X]+E[X]^2\right]$$
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 $E[X]$ is a constant so using the linearity of expectation value we obtain
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] -->
+<!-- #region tags=["answer"] jupyter={"source_hidden": true} -->
 $$E\left[X^2-2 E[X]+E[X]^2\right]=E[X62]+2E[X]E[X]-E[X]^2$$
 <!-- #endregion -->
 

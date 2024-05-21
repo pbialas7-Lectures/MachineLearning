@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.13.8
+      jupytext_version: 1.16.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -25,6 +25,7 @@ jupyter:
 import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
+import pandas as pd
 # %matplotlib inline
 plt.rcParams["figure.figsize"] = [12,8]
 plt.rcParams["animation.html"] = "jshtml"
@@ -43,13 +44,13 @@ In the gaussian mixture models - EM notebook we have used the mixture models for
 Let's assume we have $K$ components
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
+<!-- #region slideshow={"slide_type": "slide"} -->
 $\newcommand{\b}[1]{\mathbf{#1}}$
 $$p(\b x|\b \theta) = \sum_{k=1}^K\pi_k p_\mathcal{N}(\b x|\b\mu_k,\b\Sigma_k)$$
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "skip"} -->
-Generalizing the two component example from GMM-EM lecture we can introduce the latent variables $\b z\in \{0,1\}^K$ i.e. each $\b z$ is a vector of length $K$ with all entries set to zero except entry $k$ set to one which indicates that this point belongs to $k$-th  component. This is called $1-K$ encoding. 
+Generalizing the two component example from GMM-EM lecture we can introduce the latent variables $\b z\in \{0,1\}^K$ i.e. each $\b z$ is a vector of length $K$ with all entries set to zero except entry $k$ set to one which indicates that this point belongs to $k$-th  component. This is called one hot encoding. 
 <!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "fragment"} -->
@@ -92,12 +93,14 @@ $\gamma_k(\b x)$ is called _responsibility_ of $\b x$ for cluster $k$ and as a p
 Let's apply this to  the sex from height&weight example.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
-from mchlearn.datasets import load_height_weight
-```
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+inch = 0.01 * 2.54  # m
+pound = 0.453  # kg
+hw_data = pd.read_csv('../../Data/HeightWeight/weight-height.csv')
+hw_data['Height'] = hw_data['Height'] * inch
+hw_data['Weight'] = hw_data['Weight'] * pound
 
-```{python slideshow={'slide_type': 'skip'}}
-hw_data = load_height_weight('../../Data/HeightWeight/weight-height.csv')
+hw_data['BMI'] = hw_data['Weight'] / hw_data['Height'] ** 2
 ```
 
 ```{python slideshow={'slide_type': 'skip'}}
@@ -270,11 +273,27 @@ print(f"2 clusters {-hw_gm.score(hw_test[['Height', 'Weight']]):6.4f}  3 cluster
 We see that it is only marginally different then in case of two clusters. 
 <!-- #endregion -->
 
+<!-- #region slideshow={"slide_type": "slide"} -->
 ## Cross validation
+<!-- #endregion -->
 
 <!-- #region slideshow={"slide_type": "skip"} -->
 Actually we  should also not use the test set for choosing the number of components.  We should use a separate validation set. If we  do not have enough data we can recourse to cross valdation
 <!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+hw_gm1 = GaussianMixture(n_components=1, tol=1e-5, n_init=3)
+```
+
+```{python slideshow={'slide_type': '-'}}
+hw_gm1.fit(hw_train[['Height', 'Weight']])
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+from sklearn.model_selection import cross_validate
+cv1 = cross_validate(hw_gm1, hw_train[['Height', 'Weight']])
+print(cv1)
+```
 
 ```{python slideshow={'slide_type': 'fragment'}}
 from sklearn.model_selection import cross_validate
@@ -287,8 +306,8 @@ cv3 = cross_validate(hw_gm3, hw_train[['Height', 'Weight']])
 print(cv3)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
-print(f"2 clusters {-cv2['test_score'].mean():6.4f}  3 clusters {-cv3['test_score'].mean():6.4f}")
+```{python slideshow={'slide_type': 'slide'}}
+print(f"1 cluster {-cv1['test_score'].mean():6.4f} 2 clusters {-cv2['test_score'].mean():6.4f}  3 clusters {-cv3['test_score'].mean():6.4f}")
 ```
 
 <!-- #region slideshow={"slide_type": "skip"} -->

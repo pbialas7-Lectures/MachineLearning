@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import roc_auc_score, roc_curve
 
 
-def confidence_ellipse(mu, cov, ax, n_std=3.0, facecolor='none', **kwargs):
+def confidence_ellipse(mu, cov, ax, n_std=3.0, facecolor="none", **kwargs):
     """
     Create a plot of the covariance confidence ellipse of *x* and *y*.
 
@@ -35,11 +35,13 @@ def confidence_ellipse(mu, cov, ax, n_std=3.0, facecolor='none', **kwargs):
     # two-dimensionl dataset.
     ell_radius_x = np.sqrt(1 + pearson)
     ell_radius_y = np.sqrt(1 - pearson)
-    ellipse = Ellipse((0, 0),
-                      width=ell_radius_x * 2,
-                      height=ell_radius_y * 2,
-                      facecolor=facecolor,
-                      **kwargs)
+    ellipse = Ellipse(
+        (0, 0),
+        width=ell_radius_x * 2,
+        height=ell_radius_y * 2,
+        facecolor=facecolor,
+        **kwargs
+    )
 
     # Calculating the stdandard deviation of x from
     # the squareroot of the variance and multiplying
@@ -51,10 +53,12 @@ def confidence_ellipse(mu, cov, ax, n_std=3.0, facecolor='none', **kwargs):
     scale_y = np.sqrt(cov[1, 1]) * n_std
     mean_y = mu[1]
 
-    transf = transforms.Affine2D() \
-        .rotate_deg(45) \
-        .scale(scale_x, scale_y) \
+    transf = (
+        transforms.Affine2D()
+        .rotate_deg(45)
+        .scale(scale_x, scale_y)
         .translate(mean_x, mean_y)
+    )
 
     ellipse.set_transform(transf + ax.transData)
     return ax.add_patch(ellipse)
@@ -81,9 +85,9 @@ def roc_plot(figsize=[8, 8]):
     """
     fig, ax = plt.subplots(figsize=figsize)
     ax.set_aspect(1)
-    ax.set_xlabel('FPR')
-    ax.set_ylabel('TPR')
-    ax.plot([0, 1], [0, 1], linewidth=1, linestyle='--', color='grey')
+    ax.set_xlabel("FPR")
+    ax.set_ylabel("TPR")
+    ax.plot([0, 1], [0, 1], linewidth=1, linestyle="--", color="grey")
     return fig, ax
 
 
@@ -92,7 +96,7 @@ def add_roc_curve(y_true, y_score, name, ax=plt.gca, **kwargs):
         ax = plt.gca()
     fprs, tprs, thds = roc_curve(y_true, y_score)
     auc = roc_auc_score(y_true, y_score)
-    ax.plot(fprs, tprs, label="{1:5.3f} {0:s} ".format(name, auc), **kwargs);
+    ax.plot(fprs, tprs, label="{1:5.3f} {0:s} ".format(name, auc), **kwargs)
     return fprs, tprs, thds, auc
 
 
@@ -107,10 +111,89 @@ def decision_plot(data, lbls, colors, xs, ys, proba, decision, ax=None):
     if ax is None:
         ax = plt.gca()
     msk = decision_mask(xs, ys, proba, decision, colors)
-    ax.imshow(msk, extent=(xs.min(), xs.max(), ys.min(), ys.max()), origin='lower', aspect='auto', alpha=0.2)
+    ax.imshow(
+        msk,
+        extent=(xs.min(), xs.max(), ys.min(), ys.max()),
+        origin="lower",
+        aspect="auto",
+        alpha=0.2,
+    )
     max_l = np.max(lbls)
     min_l = np.min(lbls)
     labels = lbls - min_l
     n_lbls = max_l - min_l + 1
     for l in range(n_lbls):
         ax.scatter(data[labels == l, 0], data[labels == l, 1], c=[colors[l]], alpha=0.3)
+
+
+from itertools import product
+from matplotlib.patches import Rectangle
+from matplotlib import cm
+
+
+def draw_table(
+    ax,
+    tbl,
+    cmap=cm.get_cmap(),
+    box_size=(1, 1),
+    rows=(),
+    cols=(),
+    pad=0.1,
+    dim=0.25,
+    intersect=False,
+):
+    dims = tbl.shape
+    min = np.nanmin(tbl)
+    max = np.nanmax(tbl)
+    tbl_rescaled = (tbl - min) / (max - min)
+
+    for r, c in product(*map(range, dims)):
+        alpha = 1.0
+        if len(rows) > 0 or len(cols) > 0:
+            alpha = dim
+        if r in rows:
+            alpha = 1.0
+            if intersect and c not in cols:
+                alpha = dim
+            ax.add_patch(
+                Rectangle(
+                    (-pad, r - pad),
+                    dims[1] + 2 * pad,
+                    box_size[1] + 2 * pad,
+                    fc="none",
+                    ec="black",
+                )
+            )
+
+        if c in cols:
+            alpha = 1.0
+            if intersect and r not in rows:
+                alpha = dim
+            ax.add_patch(
+                Rectangle(
+                    (c - pad, -pad),
+                    box_size[0] + 2 * pad,
+                    dims[0] + 2 * pad,
+                    fc="none",
+                    ec="black",
+                )
+            )
+
+        ll = np.asarray((c, r))
+        ur = ll + box_size
+
+        if np.isnan(tbl[r, c]):
+            ax.add_patch(Rectangle(ll, *box_size, fc="white", ec="gray", alpha=alpha))
+            ax.plot((ll[0], ur[0]), (ll[1], ur[1]), color="gray", alpha=alpha)
+            ax.plot((ll[0], ur[0]), (ur[1], ll[1]), color="gray", alpha=alpha)
+
+        else:
+            ax.add_patch(
+                Rectangle(
+                    ll,
+                    *box_size,
+                    fc=cmap(tbl_rescaled[r, c]),
+                    ec="lightgray",
+                    alpha=alpha
+                )
+            )

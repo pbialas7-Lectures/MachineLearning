@@ -214,7 +214,7 @@ $\mathbf{x}$ and $\mathbf{\mu}$ are $D$-dimensional vectors $\mathbf{\mu}$ being
 #### Question How many parameters does the model have?
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} tags=["answer"] -->
+<!-- #region slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 $\mathbf{\mu}$ nas $D$ parameters and a symmetric matrix  has $(D^2-D)/2+D=D(D+1)/2$ parameters giving altogether $D(D+3)/2$ parameters.
 <!-- #endregion -->
 
