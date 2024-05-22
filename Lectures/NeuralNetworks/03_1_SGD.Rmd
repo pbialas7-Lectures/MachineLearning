@@ -18,7 +18,7 @@ jupyter:
 # %autoreload 2
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Stochastic Gradient Descent
 <!-- #endregion -->
 
@@ -30,7 +30,7 @@ import torch
 # %matplotlib inline
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 import sys
 sys.path.append('../..')
 from mchlearn import utils
@@ -384,6 +384,6 @@ plt.plot(errors[:,0], errors[:,2], '.', label='test');
 plt.legend();
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```

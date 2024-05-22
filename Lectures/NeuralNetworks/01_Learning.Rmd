@@ -27,7 +27,7 @@ import matplotlib.pyplot as plt
 plt.rcParams['figure.figsize'] = (10.0, 8.0)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 The second line above is an example of jupyter "magic command". This one ensures that the figures produced by matplotlib commands will be automatically displayed, without need for an explicit `show()` command. Third line sets the default figure size. 
 <!-- #endregion -->
 
@@ -156,11 +156,11 @@ $$\log \tilde{P}(\b{y}|\b{x})=\sum_{i}\log \tilde{P}(\b{y}_i| \b{x}_i)$$
 And finally taking the negative assures us that the results is non negative and makes it a loss function as now a bigger the value indicates a worst match
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$-\sum_{i}\log \tilde P(\b{y}_i| \b{x}_i)$$
 <!-- #endregion -->
 
-<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
 This also called _cross entropy_ loss.
 <!-- #endregion -->
 
@@ -229,7 +229,7 @@ and the goal of the algorith is to predict the class $C_j$ given the feature vec
 $$P(C_j|\b{x}_i)$$
 <!-- #endregion -->
 
-<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
 That is for each $x_i$ we get a _vector_ as the model response. 
 <!-- #endregion -->
 
@@ -249,11 +249,11 @@ which converts to negative likelihood loss:
 $$-\sum_i \log P(y_i|\b{x}_i)$$
 <!-- #endregion -->
 
-<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
 You may find out that it is sometimes written as
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 $$-\sum_i \sum_j l_{ij} \log P(C_j|\b{x}_i)$$
 <!-- #endregion -->
 
@@ -261,7 +261,7 @@ $$-\sum_i \sum_j l_{ij} \log P(C_j|\b{x}_i)$$
 Vector $\b{l}_i$ is a one-hot encoding of label $y_i$: 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 $$l_{ij}= \begin{cases}
 1 & y_i=C_j\\
 0 & \text{otherwise}
@@ -570,6 +570,6 @@ The goal is to have low validation error, not only the training error.
 The model is only as good as the collected data is representative.
 <!-- #endregion -->
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```

@@ -26,7 +26,7 @@ import numpy as np
 # Classification 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As the classification example we will use the "Hello World!" of machine learning: ["The MNIST Database of hanwritten digits"](http://yann.lecun.com/exdb/mnist/). 
 <!-- #endregion -->
 
@@ -111,7 +111,7 @@ For classification problems  with $M$  possible categories $C=\{0,\ldots,M-1\}$ 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$o^l_{ij} = P(i | \mathbf{x}_j)$$
+$$o^l_{ij} = P(C_i | \mathbf{x}_j)$$
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
@@ -472,6 +472,6 @@ model_accuracy(model, train_dataset)
 model_accuracy(model, test_dataset)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As we can see the accuracy is much smaller: the convergence is slower. In the next notebook we will take a look at why it is so. 
 <!-- #endregion -->

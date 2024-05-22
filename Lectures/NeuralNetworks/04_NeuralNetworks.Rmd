@@ -24,11 +24,11 @@ import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (10,8)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Neural networks 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As we have learned in the previous notebook  a key ingredient of the supervised learning is finding a mapping that minimizes loss over a given data set. As we cannot generally find a minimum in a set of all functions (and actually we do not want to) we are looking for the minimum in a familly of functions defined by some set of parameters. 
 <!-- #endregion -->
 

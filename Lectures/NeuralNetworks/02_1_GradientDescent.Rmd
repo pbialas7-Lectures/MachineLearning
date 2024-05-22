@@ -21,26 +21,26 @@ import matplotlib.pyplot as plt
 plt.rcParams["figure.figsize"] = (10,8)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Gradient Descent
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 $\newcommand{\loss}{\operatorname{loss}}\newcommand{\argmin}{\operatorname*{argmin}}$
 $$f =\argmin_f\loss\left(\mathbf{y},\,f(\mathbf{x})\right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$f(\mathbf{x})=f(\mathbf{x}|\mathbf{w})$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $\newcommand{\loss}{\operatorname{loss}}\newcommand{\argmin}{\operatorname*{argmin}}$
 $$f =\argmin_f\loss\left(\mathbf{y},\,f(\mathbf{x})\right)
 = \argmin_\mathbf{w}\loss\left(\mathbf{y},\,f(\mathbf{x}|\mathbf{w})\right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As stated previously supervised learning is usually performed by minimizing a loss function with respect to its parameters. Usually the number of those parameters is very big, on the order of millions for modern neural networks. Most efficient minimization algorithms use some form gradient descent.
 <!-- #endregion -->
 

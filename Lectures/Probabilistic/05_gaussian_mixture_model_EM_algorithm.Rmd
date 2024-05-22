@@ -1083,8 +1083,12 @@ def evaluate(nc0, nc1,X,y, X_valid, y_valid):
     return f1_score(y_valid, proba>0.5)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 evaluate(1,1,hc_train, hc_lbl_train, hc_test, hc_lbl_test)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+evaluate(2,2,hc_train, hc_lbl_train, hc_test, hc_lbl_test)
 ```
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -1110,7 +1114,7 @@ folder.get_n_splits()
 ```{python}
 f1=0
 for train_i, test_i in folder.split(hc_train, hc_lbl_train):
-    f1+=evaluate(2,2,hc_train[train_i], hc_lbl_train[train_i], hc_train[test_i], hc_lbl_train[test_i])
+    f1+=evaluate(5,5,hc_train[train_i], hc_lbl_train[train_i], hc_train[test_i], hc_lbl_train[test_i])
 print(f1/folder.get_n_splits())
 ```
 
