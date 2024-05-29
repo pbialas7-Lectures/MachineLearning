@@ -21,8 +21,12 @@ from IPython.core.display import Image, SVG
 import numpy as np
 import matplotlib.pyplot as plt
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = (10,8)
+plt.rcParams["figure.figsize"] = (8,6)
 ```
+
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
+For this notebook we need to have the `PyTorch` neural network package installed. For instructions see the [package web page](https://pytorch.org/get-started/locally/). 
+<!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Neural networks 
@@ -32,31 +36,36 @@ plt.rcParams["figure.figsize"] = (10,8)
 As we have learned in the previous notebook  a key ingredient of the supervised learning is finding a mapping that minimizes loss over a given data set. As we cannot generally find a minimum in a set of all functions (and actually we do not want to) we are looking for the minimum in a familly of functions defined by some set of parameters. 
 <!-- #endregion -->
 
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+$\newcommand{\b}[1]{\mathbf{#1}}$
+$$f(\mathbf{x})=f(\mathbf{x}|\mathbf{w})$$
+<!-- #endregion -->
+
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
 The loss function the becomes the function of those parameters only. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+$$L(\b{y},\b x|\b w) = \sum_i L(\b y_i, f(\mathbf{x_i}|\mathbf{w})) = L(\b w)$$
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 The neural networks make up such a familly of functions. Those functions are made up by composing together many elementary simple functions. Those  elementary functions are usually called neurons. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$f(\mathbf{x})=f(\mathbf{x}|\mathbf{w})$$
-<!-- #endregion -->
-
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Neuron
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 A single neuron can have many inputs and only one output.  
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 from IPython.core.display import SVG
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 SVG(filename='../figures/perceptron.svg')
 ```
 
@@ -65,7 +74,7 @@ There is a number $w_i$, called *weight*, associated with each input. Each input
 *bias* is added to the sum:
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$o = \sum_k w_k x_k +b$$
 <!-- #endregion -->
 
@@ -73,7 +82,7 @@ $$o = \sum_k w_k x_k +b$$
  and the result is used as an argument of an *activation function*.  
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$y = a(o) = a\left(\sum_k w_k x_k + b\right)$$
 <!-- #endregion -->
 
@@ -81,7 +90,7 @@ $$y = a(o) = a\left(\sum_k w_k x_k + b\right)$$
 Together weights, bias and activation function define the behaviour of the neuron. The activation function is chosen once and remains constant. The weights and bias are the parameters that  have to be optimized during learning. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Activation functions
 <!-- #endregion -->
 
@@ -89,27 +98,33 @@ Together weights, bias and activation function define the behaviour of the neuro
 The simplest activation function would be the identity, which can be also considered as no activation function
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Identity 
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+## Identity 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$a(x)=x$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+xs = np.linspace(-10,10,100)
+plt.plot(xs,xs,'-')
+plt.grid()
+```
+
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 However this means that all that the neuron, or a collection of neurons can calculate are just affine functions. This is a much to small family for any practical use. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 To be able to represent more complicated functions we need to add some *non-linearity*
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Step function
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+## Step function
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$
 \Theta(x) = \begin{cases}
 0 & x\leq0 \\
@@ -118,62 +133,90 @@ $$
 $$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Sigmoid
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+xs = np.linspace(-10,10,100)
+plt.plot(xs,np.where(xs>1,1,0),'-')
+plt.grid()
+```
+
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+## Sigmoid
 <!-- #endregion -->
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
 
 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$s(x) = \frac{1}{1+e^{-x}} = \frac{e^x}{1+e^x}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 def s(x):
     return 1.0/(1.0+np.exp(-x))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 xs = np.linspace(-10,10,100)
 plt.plot(xs,s(xs),'-')
 plt.grid()
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Softmax
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+## Softmax
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$y_i = \frac{e^{o_i}}{\sum_i e^{o_i}}$$ 
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+$$y_i = \frac{e^{o_i}}{\sum_i e^{o_i}},\qquad i=0,1,\ldots,n-1$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$\sum_i y_i = 1$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
+For $n=2$ this reduces to sigmoid with $x=o_0-o_1$
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+$$y_0 = \frac{e^{o_0}}{ e^{o_0}+e^{o_1}}=\frac{e^{o_0-o_1}}{ e^{o_0-o_1}+1}\qquad y_1 = \frac{e^{o_1}}{ e^{o_0}+e^{o_1}} =\frac{1}{ e^{o_0-o_1}+1}$$ 
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ### Tanh
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$ \tanh(x) =\frac{e^{x}-e^{-x}}{e^x+e^{-x}}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 plt.plot(xs,np.tanh(xs),'-');
+plt.grid();
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
+This is just a rescaled version of sigmoid function 
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+$$
+\begin{split}
+\tanh(x) &=\frac{e^{x}-e^{-x}}{e^x+e^{-x}} = \frac{1-e^{-2x}}{1+e^{-2x}}\\
+& =  \frac{1-e^{-2x}}{1+e^{-2x}} +  \frac{1+e^{-2x}}{1+e^{-2x}} -1 = 2\frac{1}{1+e^{-2x}}-1
+\end{split}
+$$
+<!-- #endregion -->
+
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$\tanh(x) = 2 s(2 x) -1 $$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ### Rectified Linear Unit ( ReLU)
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$
 \newcommand{\relu}{\operatorname{relu}}
 \relu(x) = \begin{cases}
@@ -183,37 +226,37 @@ x & x>0
 $$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 import torch
 relu = torch.nn.ReLU()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 plt.plot(xs,relu(torch.from_numpy(xs)).numpy(),'-')
-plt.show()
+plt.grid();
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
-### Hiden layer
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+# Hiden layer
 <!-- #endregion -->
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 SVG(filename='../figures/hidden_layer.svg')
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 $$h_i = a^{(1)}\left(\sum_{j}w^{(1)}_{ij}x_j + b^{(1)}_i\right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$h = a^{(1)}\left(w^{(1)}x + b^{(1)}\right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 $$y =  a^{(2)}\left(\sum_{j}w^{(2)}_{ij}h_j + b^{(2)}_i\right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 
 
 
@@ -234,35 +277,35 @@ w^{(2)}a^{(1)}\left(w^{(1)}x + b^{(1)}
 \right)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Multilayer perceptron
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 SVG(filename ='../figures/MLP.svg')
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 import torch.nn as nn
 import torch
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 torch.__version__
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 net = nn.Sequential(nn.Linear(in_features=1, out_features=128), nn.ReLU(),
                    nn.Linear(in_features=128, out_features=64), nn.ReLU(), 
                    nn.Linear(in_features=64, out_features=32), nn.ReLU(), 
                    nn.Linear(in_features=32, out_features=1))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
 How many parameters does this network have?
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 data = np.load("../data/sgd_data.npy").astype('float32')
 rxs = data[:50,0]
 rys = data[:50,1]
@@ -270,23 +313,32 @@ rxs_valid = data[50:75,0]
 rys_valid = data[50:75,1]
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
+`PyTorch` dense layers functions expect a two-dimensional input
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 t_rxs = torch.from_numpy(rxs).view(-1,1)
 t_rys = torch.from_numpy(rys).view(-1,1)
 t_rxs_valid = torch.from_numpy(rxs_valid).view(-1,1)
 t_rys_valid = torch.from_numpy(rys_valid).view(-1,1)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+t_rxs.shape
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 loss_f = nn.MSELoss()
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 optim = torch.optim.SGD(net.parameters(),lr=0.001)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time 
+loss_list = []
 for epoch in range(25000):
     optim.zero_grad()
     pred = net(t_rxs)
@@ -295,21 +347,78 @@ for epoch in range(25000):
     with torch.no_grad():
         pred_valid = net(t_rxs_valid)
         loss_valid = loss_f(pred_valid, t_rys_valid)
+    loss_list.append((loss.item(), loss_valid))  
     optim.step()
-print(loss, loss_valid)
+loss_list = np.array(loss_list)  
+print(f"train loss = {loss.item():.4f} test loss = {loss_valid:.4f}")
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plt.plot(loss_list[::10,0], label='train');
+plt.plot(loss_list[::10,1], label='test');
+plt.legend();plt.title("Loss");
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 xs = torch.linspace(-np.pi, np.pi, 200,)
 t_ys = net(xs.view(-1,1))
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 plt.scatter(rxs, rys, color='none', edgecolors='black')
 plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
 plt.plot(xs,t_ys.detach().numpy());
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+net = nn.Sequential(nn.Linear(in_features=1, out_features=128), nn.ReLU(),
+                   nn.Linear(in_features=128, out_features=64), nn.ReLU(), 
+                   nn.Linear(in_features=64, out_features=32), nn.ReLU(), 
+                   nn.Linear(in_features=32, out_features=1))
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+optim = torch.optim.SGD(net.parameters(),lr=0.1)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+# %%time 
+loss_list = []
+for epoch in range(25000):
+    optim.zero_grad()
+    pred = net(t_rxs)
+    loss = loss_f(pred, t_rys)
+    loss.backward()
+    with torch.no_grad():
+        pred_valid = net(t_rxs_valid)
+        loss_valid = loss_f(pred_valid, t_rys_valid)
+    loss_list.append((loss.item(), loss_valid))  
+    optim.step()
+loss_list = np.array(loss_list)  
+print(f"train loss = {loss.item():.4f} test loss = {loss_valid:.4f}")
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plt.plot(loss_list[::100,0], label='train');
+plt.plot(loss_list[::100,1], label='test');
+plt.legend();plt.title("Loss");
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+xs = torch.linspace(-np.pi, np.pi, 200,)
+t_ys = net(xs.view(-1,1))
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+plt.scatter(rxs, rys, color='none', edgecolors='black')
+plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
+plt.plot(xs,t_ys.detach().numpy());
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```

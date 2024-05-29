@@ -83,7 +83,7 @@ for i in range(4):
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": ""} -->
-Train a neural network classifier to predict counterfeit banknotes. Use the features `a0` and `a3`. 
+Train a neural network classifier to predict counterfeit banknotes. Use the features `a0` and `a3`. Calculate the confussion matrix  and AUC score. 
 <!-- #endregion -->
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
@@ -111,28 +111,16 @@ model = tnn.Sequential(tnn.Linear(in_features=nf, out_features=1), tnn.Sigmoid()
 ```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
-loss_fn = tnn.BCELoss()
+from sklearn.metrics import roc_curve, confusion_matrix, accuracy_score
 ```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
-optimizer = torch.optim.SGD(model.parameters(),lr=10.0)
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
+y_true = labels_test.numpy()
 with torch.no_grad():
-    pred =  model(features_train)
-    acc = torch.mean(0.0+ ((pred > 0.5)== (labels_train>0.5)))
-acc    
+  y_proba = model(features_test);
+  y_predicted = 1*(y_proba>0.5)
 ```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
-
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-
+accuracy_score(y_true, y_pred=y_predicted)
 ```

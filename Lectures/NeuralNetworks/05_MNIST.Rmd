@@ -22,7 +22,7 @@ import numpy as np
 # %matplotlib inline
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Classification 
 <!-- #endregion -->
 
@@ -30,7 +30,7 @@ import numpy as np
 As the classification example we will use the "Hello World!" of machine learning: ["The MNIST Database of hanwritten digits"](http://yann.lecun.com/exdb/mnist/). 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## MNIST
 <!-- #endregion -->
 
@@ -56,7 +56,7 @@ train_labels = train_data.targets
 The data consists of 28 by 28 pixels 8bit grayscale images of handwritten digits, the labels are integers denoting corresponding digits:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig_mnist, axes = plt.subplots(2,4, figsize=(16,8))
 for i in range(8):
     ax=axes.ravel()[i]
@@ -64,8 +64,8 @@ for i in range(8):
     ax.set_title(train_labels[i].item(), fontsize=20)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
-For the purpose of this notebook I will load only a sybset of data. This will make the training of the network much quicker. 
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
+For the purpose of this notebook I will load only a subset of data. This will make the training of the network much quicker. 
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -76,7 +76,7 @@ n_samples = 12000
 Because we will be using the fully connected neural network as our classifier I will flatten each image to 28x28 long 1D array. I will also normalize the grayscale values to [0,1). 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 dataset = torch.utils.data.TensorDataset( 
     (train_features[:n_samples]/256.0).view(-1,28*28), 
     train_labels[:n_samples])
@@ -86,7 +86,7 @@ dataset = torch.utils.data.TensorDataset(
 train_dataset, validation_dataset = torch.utils.data.random_split(dataset, (10000,2000))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 train_loader = torch.utils.data.DataLoader(train_dataset, 
                                            batch_size = 100, 
                                            shuffle = True)
@@ -95,7 +95,7 @@ validation_loader = torch.utils.data.DataLoader(validation_dataset,
                                            shuffle = True)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 test_features   = test_data.data.to(dtype=torch.float32)
 test_labels = test_data.targets
 test_dataset = torch.utils.data.TensorDataset(
@@ -130,26 +130,28 @@ Where $o^{l-1}_i$ is the output of the previous layer.  I will  use the word _la
 We will use the  _Negative Log Likelihood_ loss:
 <!-- #endregion -->
 
-$$-\sum_{j=0}^N\log P(c_j|\mathbf{x}_j) = -\sum_{i=0}^N\log o^l_{ c_{\scriptstyle j}j}$$ 
+<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+$$-\sum_{j=0}^N\log P(c_j|\mathbf{x}_j) = -\sum_{j=0}^N\log o^l_{ c_{\scriptstyle j}j}$$ 
+<!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
 where $c_j$  is the category corresponding to features $\mathbf{x}_j$. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 This is often written in _cross entropy_ form:
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 $$-\sum_{j=0}^N
 \sum_{i=0}^{M-1} l_{ij} \log o^l_{ij}$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 where $l_{ij}$ are _one-hot_ encoded categories:
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 $$ l_{ij} =\begin{cases}
 1 & c_j = i \\
 0 & c_j\neq i
@@ -157,7 +159,7 @@ $$ l_{ij} =\begin{cases}
 $$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## The model 
 <!-- #endregion -->
 
@@ -165,7 +167,7 @@ $$
 We will use a fully  four  fully connected layers with `ReLU` activation layers in between as our model and `softmax` as the last layer.  The model can be easily constructed using the PyTorch `nn.Sequential` class:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model = torch.nn.Sequential(
     nn.Linear(28*28,1200), nn.ReLU(),
     nn.Linear(1200,600), nn.ReLU(),
@@ -174,7 +176,7 @@ model = torch.nn.Sequential(
 )
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 The network has 28x28=784 inputs and ten outputs which correspond to ten possible categories.  The model parameters: weights and biases are initalized randomly (more on this in other lectures). Let's check how this model performs, we will use   the `torch.no_grad()` _context manager_ to temporalily switch off gradient calculations
 <!-- #endregion -->
 
@@ -183,11 +185,11 @@ with torch.no_grad():
     pred = model(train_dataset[:][0])
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Tensor `pred` contains the predicted probabilities for each  digit for each input:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 pred[:4]
 ```
 
@@ -203,7 +205,7 @@ pred.sum(1)
 The accuracy of  clasification can be calculated as follows: 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 def accuracy(pred, labels):
     return torch.sum(torch.argmax(pred,axis = 1)==labels).to(dtype=torch.float32).item()/len(labels)
 ```
@@ -212,19 +214,19 @@ def accuracy(pred, labels):
 Let's break down this function. The `argmax` function with `axis` argument equal to one for each row returns the index of the column containing the largest value. This is next compared with actual labels.   Finally we use implicit conversion of `False` to zero and `True` to one to calculate the number of labels predicted correctly. We finally divide by the length of the dataset to obtain accuracy. The conversion to float is needed because otherwise the integer arthmetic is used. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
-Not suprisingly our accuracy is even worse then random guessing
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
+Not suprisingly our accuracy is on the level of randpm guessing
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 accuracy(pred, train_dataset[:][1])
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 We will  define another  accuracy function for further convenience: 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 def model_accuracy(model, dataset):
     features, labels = dataset[:]
     with torch.no_grad():
@@ -236,7 +238,7 @@ def model_accuracy(model, dataset):
 Before we start training we need the loss function:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 def my_nll_loss(pred, labels):
     return -torch.mean(
         torch.log(0.0000001+pred[range(len(labels)),labels])
@@ -251,11 +253,11 @@ Let's break it down: the `pred[range(len(labels)),labels]`  expression takes fro
 After all this being said we can finally start training:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 optim = torch.optim.SGD(model.parameters(), lr=0.1)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
 for e in range(5):
     for features, labels in train_loader:        
@@ -267,54 +269,54 @@ for e in range(5):
     print(e, loss.item())        
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Because logarthmic is a monotonicaly increasing function the accuracy functions will work even if the outputs do not represent probabilities. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, train_dataset)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As you can see the accuracy has increased greatly. But really important is the accuracy on the test data set:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, test_dataset)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 After training the model we can save it to file:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 torch.save(model,"mnist.pt")
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 and load later
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
-copy = torch.load("mnist.pt")
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+model_copy = torch.load("mnist.pt")
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 with torch.no_grad():
-    pred = copy(train_dataset[:][0])
+    pred = model_copy(train_dataset[:][0])
     ac = torch.sum(torch.argmax(pred,1)==train_dataset[:][1]).to(dtype=torch.float32)/len(train_dataset)
 ac 
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Using PyTorch loss functions
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Our formulation of the loss function required calculation of the  logarithm of the softmax function. Doing those two operations separately is slower and numerically unstable. That's why PyTorch privides an implementation of the `log_softmax` function that does  both operations together. Please note that now the outputs of the model do not represent the probabilities.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model = torch.nn.Sequential(
     nn.Linear(28*28,1200), nn.ReLU(),
     nn.Linear(1200,600), nn.ReLU(),
@@ -323,19 +325,19 @@ model = torch.nn.Sequential(
 )
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 We can now use the provided  negative likelihood loss function that expects the logarithms of probabilities as its input:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 nll_loss = torch.nn.NLLLoss()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 optim = torch.optim.SGD(model.parameters(), lr=0.1)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
 for e in range(5):
     for features, labels in train_loader:        
@@ -347,23 +349,23 @@ for e in range(5):
     print(e, loss.item())        
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 The accuracy functions will still work because the logarithm is monotonically increasing function.  
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, train_dataset)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, test_dataset)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 And finally we can drop the last activation layer
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 model = torch.nn.Sequential(
     nn.Linear(28*28,1200), nn.ReLU(),
     nn.Linear(1200,600), nn.ReLU(),
@@ -372,19 +374,19 @@ model = torch.nn.Sequential(
 )
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 and use the cross entropy loss function that  calculates the log softmax internally
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 ce_loss = torch.nn.CrossEntropyLoss()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 optim = torch.optim.SGD(model.parameters(), lr=0.1)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
 for e in range(5):
     for features, labels in train_loader:        
@@ -396,46 +398,54 @@ for e in range(5):
     print(e, loss.item())        
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 The accuracy functions will still work as before, because softmax  does not change the relative order of the input values.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, train_dataset)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, test_dataset)
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## MSE loss
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 And finally we will use the MSE loss for comparison. To this end we have to one-hot encode the labels:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 one_hot_labels = torch.zeros(n_samples, 10).to(dtype=torch.float32)
 one_hot_labels[range(n_samples),train_labels[:n_samples]] =  1.0
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+train_labels[:10]
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+one_hot_labels[:10]
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 one_hot_dataset = torch.utils.data.TensorDataset( 
     (train_features[:n_samples]/256.0).view(-1,28*28), 
     one_hot_labels)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 one_hot_train_dataset, one_hot_validation_dataset = torch.utils.data.random_split(one_hot_dataset,(10000,2000))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 one_hot_train_loader = torch.utils.data.DataLoader(one_hot_train_dataset, batch_size=100)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 model = torch.nn.Sequential(
     nn.Linear(28*28,1200), nn.ReLU(),
     nn.Linear(1200,600), nn.ReLU(),
@@ -444,15 +454,15 @@ model = torch.nn.Sequential(
 )
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 optim = torch.optim.SGD(model.parameters(), lr=0.1)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 mse_loss = torch.nn.MSELoss()
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 # %%time
 for e in range(5):
     for features, labels in one_hot_train_loader:        
@@ -464,14 +474,14 @@ for e in range(5):
     print(e, loss.item())        
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, train_dataset)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 model_accuracy(model, test_dataset)
 ```
 
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
-As we can see the accuracy is much smaller: the convergence is slower. In the next notebook we will take a look at why it is so. 
+As we can see the accuracy is much smaller: the convergence is slower.
 <!-- #endregion -->
