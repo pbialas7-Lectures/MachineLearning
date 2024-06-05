@@ -310,7 +310,7 @@ plt.plot(loss_list[::10,1], label='test');
 plt.legend();plt.title("Loss");
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 xs = torch.linspace(-np.pi, np.pi, 200,)
 t_ys = net(xs.view(-1,1))
 ```
@@ -319,4 +319,53 @@ t_ys = net(xs.view(-1,1))
 plt.scatter(rxs, rys, color='none', edgecolors='black')
 plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
 plt.plot(xs,t_ys.detach().numpy());
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+net = nn.Sequential(nn.Linear(in_features=1, out_features=128), nn.ReLU(),
+                   nn.Linear(in_features=128, out_features=64), nn.ReLU(), 
+                   nn.Linear(in_features=64, out_features=32), nn.ReLU(), 
+                   nn.Linear(in_features=32, out_features=1))
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+optim = torch.optim.SGD(net.parameters(),lr=0.1, momentum=0.7)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+# %%time 
+loss_list = []
+for epoch in range(20000):
+    optim.zero_grad()
+    pred = net(t_rxs)
+    loss = loss_f(pred, t_rys)
+    loss.backward()
+    with torch.no_grad():
+        pred_valid = net(t_rxs_valid)
+        loss_valid = loss_f(pred_valid, t_rys_valid)
+    loss_list.append((loss.item(), loss_valid))  
+    optim.step()
+loss_list = np.array(loss_list)  
+print(f"train loss = {loss.item():.4f} test loss = {loss_valid:.4f}")
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plt.plot(loss_list[::10,0], label='train');
+plt.plot(loss_list[::10,1], label='test');
+plt.legend();plt.title("Loss");
+```
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+xs = torch.linspace(-np.pi, np.pi, 200,)
+t_ys = net(xs.view(-1,1))
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+plt.scatter(rxs, rys, color='none', edgecolors='black')
+plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
+plt.plot(xs,t_ys.detach().numpy());
+```
+
+```{python}
+
 ```

@@ -242,10 +242,13 @@ nn.Conv2d(in_channels=1,out_channels=32,
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
 $$\begin{array}{cccccc}
-O_{i,j} = \displaystyle \sum_{k,l=0}^{K-1} & w_{k,l}&\times &I_{i+k,j+l}&+&b_{c}&,\qquad i = 0,\ldots,H_i, \;j = 0,\ldots,W_i \\
+O_{i,j} = \displaystyle \sum_{k,l=-L}^{L} & w_{k,l}&\times &I_{i+k,j+l}&+&b_{c}&,\qquad i = L,\ldots,H-L-1, \;j = L,\ldots,W-L-1 \\
 & \uparrow & &&&\uparrow&\\
 &\text{kernel}& &&&\text{bias}&
 \end{array}
+$$
+$$
+K = 2L+1
 $$
 <!-- #endregion -->
 
@@ -391,28 +394,19 @@ anim = FuncAnimation(fig, update, frames=product(range(0,5), range(0,5)), init_f
 anim
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-t = torch.arange(9).to(dtype=torch.float).reshape(1,1,3,3)
-print(t)
-```
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+$$\begin{array}{cccccc}
+O_{i,j} = \displaystyle \sum_{k,l=-L}^{L} & w_{k,l}&\times &I_{i+k,j+l}&+&b_{c}&  \\
+& \uparrow & &&&\uparrow&\\
+&\text{kernel}& &&&\text{bias}&
+\end{array}
+$$
+$$
+K = 2L+1,\quad i = L-P,\ldots,H-L+P_h-1, \;j = L-P,\ldots,W-L+P_w-1 
+$$
+<!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
-print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'constant', value=0) )
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'reflect') )
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'replicate') )
-```
-
-```{python slideshow={'slide_type': 'slide'}}
-print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'circular') )
-```
-
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 # %%capture
 kernel_left = None
 kernel_right = None
@@ -468,6 +462,27 @@ anim = FuncAnimation(fig, update, frames=product(range(0,6), range(0,6)), init_f
 
 ```{python slideshow={'slide_type': 'slide'}}
 anim 
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+t = torch.arange(9).to(dtype=torch.float).reshape(1,1,3,3)
+print(t)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'constant', value=0) )
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'reflect') )
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'replicate') )
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+print(torch.nn.functional.pad(t,(2,2,2,2),mode = 'circular') )
 ```
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
@@ -537,12 +552,12 @@ anim
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
-$$O_{i,j} =\displaystyle \sum_{k,l=0}^{K-1} w_{c,k,l}\times I_{c,-P_i+i+k, -P_i+j+l}+b$$
+$$O_{i,j} =\sum_{c=0}^{C_i}\displaystyle \sum_{k,l=-L}^{L} w_{c,k,l}\times I_{c,i+k, j+l}+b$$
 
-$$i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
+$$i = L-P_h,\ldots,H-L+ P_h -1, \;j = L-P_h,\ldots,W-L+ P_h-1$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Output chanels -- Filters
 <!-- #endregion -->
 
@@ -551,8 +566,8 @@ $$(N_i,C_i,H_i,W_i)\longrightarrow (N_i,C_o,H_o,W_o)$$
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$O_{c,i,j} = \sum_{c^\prime=0}^{C_i-1} \displaystyle \sum_{k,l=0}^{K-1} w_{c,c^\prime k,l}I_{c^\prime,-P_i+i+k, -P_i+j+l}+b_{c}$$
-$$\qquad c=0,\ldots C_o-1,\;i = 0,\ldots,H_i-2 P_i, \;j = 0,\ldots,W_i-2 P_i$$
+$$O_{c,i,j} = \sum_{c^\prime=0}^{C_i-1} \displaystyle \sum_{k,l=-L}^{L} w_{c,c^\prime k,l}I_{c^\prime,i+k, j+l}+b_{c}$$
+$$\qquad c=0,\ldots C_o-1,\;i = L-P_h,\ldots,H-L+P_h-1, \;j = L-P_w,\ldots,W-L + P_w-1$$
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
@@ -624,22 +639,24 @@ print(torch.nn.functional.avg_pool2d(t, kernel_size=2))
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
-$$o = \sqrt[\leftroot{20}\uproot{2}\textstyle p]{\sum_{i,j}x_{i,j}^p}$$
+$$o = \sqrt[\leftroot{20}\uproot{2}\textstyle p]{\sum_{i,j}x_{i,j}^p}=
+\left({\sum_{i,j}x_{i,j}^p}\right)^{\frac{1}{p}}
+$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 print(t)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 print(torch.nn.functional.lp_pool2d(t, kernel_size=2, norm_type=1))
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 print(torch.nn.functional.lp_pool2d(t, kernel_size=2, norm_type=50))
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Classifier
 <!-- #endregion -->
 
@@ -681,7 +698,7 @@ from IPython.display import Image
 Image(filename='vgg16.png')
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 import torchvision.models as models
 vgg16 = models.vgg16()
 n_param = 0
@@ -690,11 +707,11 @@ for p in vgg16.parameters():
     n_param+= p.nelement()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 print(f"{n_param/(2**20):.2f}M parameters")    
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': ''}, editable=TRUE}
 print(f"{4*n_param/(2**20):.2f}MB")    
 ```
 
@@ -709,6 +726,6 @@ for name, obj in  inspect.getmembers(models):
 ## Transfer learning
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 vgg16 = models.vgg16(weights=models.VGG16_Weights.DEFAULT)
 ```

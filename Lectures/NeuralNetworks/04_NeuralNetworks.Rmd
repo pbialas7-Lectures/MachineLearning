@@ -134,8 +134,8 @@ $$
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-xs = np.linspace(-10,10,100)
-plt.plot(xs,np.where(xs>1,1,0),'-')
+xs = np.linspace(-10,10,1000)
+plt.plot(xs,np.where(xs>0,1,0),'-')
 plt.grid()
 ```
 

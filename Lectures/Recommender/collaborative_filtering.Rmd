@@ -1,0 +1,734 @@
+---
+jupyter:
+  jupytext:
+    text_representation:
+      extension: .Rmd
+      format_name: rmarkdown
+      format_version: '1.2'
+      jupytext_version: 1.16.1
+  kernelspec:
+    display_name: Python 3 (ipykernel)
+    language: python
+    name: python3
+---
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+# %load_ext autoreload
+# %autoreload 2
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+import numpy as np
+import scipy as sp
+import matplotlib.pyplot as plt
+from matplotlib import cm
+from IPython.display import Image
+from scipy.stats import rv_discrete 
+from scipy.stats import bernoulli
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+import sys
+sys.path.append('../../mchlearn')
+from plotting import draw_table
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+np.set_printoptions(precision = 2)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+# Recommender systems
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+# Collaborative filtering
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+[Two decades of recomender systems at Amazon](https://assets.amazon.science/76/9e/7eac89c14a838746e91dde0a5e9f/two-decades-of-recommender-systems-at-amazon.pdf)
+
+[Item-based collaborative filtering recommendation algorithms](https://dl.acm.org/doi/pdf/10.1145/371920.372071)
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+## Rating matrix
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+Image(filename='collaborative_filtering.png')
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from [Item-based collaborative filtering recommendation algorithms](https://dl.acm.org/doi/pdf/10.1145/371920.372071)
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+np.random.seed(1222)
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+The items are rated on a five star scale. For simplicity we have considered that an user can consider an item as "good", "average" and "bad" and based on this can give a certain amount of stars, but the exact number depends on his mood. Below are the distributions of the number of stars for each evaluation
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+good = rv_discrete(values=(range(1,6),np.array([0.0, 0.0,0.1, 0.4, 0.5])))
+average = rv_discrete(values=(range(1,6),np.array([0.15, 0.2,0.3, 0.2, 0.15])))
+bad  = rv_discrete(values=(range(1,6),np.array([0.7, 0.3,0.0, 0.0, 0.0])))
+
+like = np.asarray([good, average, bad])
+like_str=('good', 'average', 'bad')
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+n_items = 8
+n_users = 24
+```
+
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+An item can belong to one of the two categories
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'skip'}}
+categories = np.random.permutation(
+    np.concatenate((np.zeros(n_items//2), np.ones(n_items//2)) ).astype('int64'))
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+categories
+```
+
+<!-- #region slideshow={"slide_type": "skip"} -->
+Each user has its own preferences for the items in each categories and based on that rates them
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def rate(n_users, like, categories):
+    users=[]
+    n_items = len(categories)
+    R = np.empty((n_users, n_items))
+    for u in range(n_users):
+        ind = np.random.randint(3,size=(2,), dtype='int32')
+        users.append(ind)
+        dists = like[ind]
+        for i in range(len(categories)):
+            R[u,i]= dists[categories[i]].rvs()
+    return users, R    
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+users, R_true = rate(n_users, like, categories)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+for u in users:
+  print(f"{like_str[u[0]]:10s} {like_str[u[1]]:10s}  {np.sum([1,3]*u)}")
+```
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+users=np.asarray(users)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+R_true
+```
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+def missing(p,t):
+    m = bernoulli.rvs(p=p, size=t.shape)
+    t_mis=t.copy()
+    t_mis[np.where(m==1)]=np.nan
+    return t_mis
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+p_miss = 1/3
+R = missing(p_miss,R_true)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+R
+```
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+## Neighborhood-Based
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots(figsize=(8,12))
+ax.set_xlim(0,8)
+ax.set_ylim(0,24)
+draw_table(ax, R)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+## Item based
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+Image(filename='item_based_cf.png')
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from [Item-based collaborative filtering recommendation algorithms](https://dl.acm.org/doi/pdf/10.1145/371920.372071).
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+fig, ax = plt.subplots(figsize=(8,12))
+ax.set_xlim(-.2,8.2)
+ax.set_ylim(-.2,24.2)
+draw_table(ax, R, rows=(11,), cols=())
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots(figsize=(8,12))
+ax.set_xlim(-.2,8.2)
+ax.set_ylim(-.2,24.2)
+draw_table(ax, R, rows=(11,), cols=(0,4), pad=0)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+fig, ax = plt.subplots(figsize=(8,12))
+ax.set_xlim(-.2,8.2)
+ax.set_ylim(-.2,24.2)
+draw_table(ax, R, rows=(2, 7, 8, 10, 15, 17,), cols=(0,4), pad=0, dim=0.1, intersect=True)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+### Correlation based similarity
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Users that have rated item $i$
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+$$I_i = \{u:R_{ui}\text{ is not nan }\}$$
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Average rating of the item $i$
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+$$\mu_i = \frac{\sum_{u\in I_i} R_{ui}}{|I_i|}$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "-"} editable=true -->
+$$\newcommand{\Sim}{\operatorname{Sim}}$$
+$$\operatorname{pearson}(i,j) = \frac{\sum_{u \in I_i \cap I_j}(R_{iu}-\mu_i)(R_{ju}-\mu_j)}
+{\sqrt{\sum_{u \in I_i \cap I_j}(R_{iu}-\mu_i)^2}\sqrt{\sum_{u \in I_i \cap I_j }(R_{ju}-\mu_j)^2}}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def pearson(u,v):
+    """
+    Pearson correlation between two vectors 
+    calculated on the elements which are not None in both vectors. 
+    """
+    J_u = np.where(~np.isnan(u))
+    J_v = np.where(~np.isnan(v))
+    J_uv = np.intersect1d(J_u, J_v)
+    if J_uv.size >0:
+        v_u = u[J_uv]-np.nanmean(u)
+        v_v = v[J_uv]-np.nanmean(v)
+        norm = np.linalg.norm(v_u)*np.linalg.norm(v_v)
+        
+        if norm>0:
+            return np.dot(v_u,v_v)/norm
+        else:
+            return 0
+        
+    return np.NAN    
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Items rated by user $11$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+rated_items = np.where(~np.isnan(R[11]))[0]
+rated_items
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Correlation betwee items rated by user $11$ and item $4$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+p_sim = np.asarray(list(
+  map(lambda c: (c,pearson(R[:,c], R[:,4]), R[11,c]), 
+      rated_items)))
+p_sim
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+### Cosine similarity
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "fragment"} -->
+$$\vec v\cdot \vec w= |v|\cdot|w|\cos\angle(v,w)$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$\cos(i,j) = \frac{\sum_{u \in I_i \cap I_j}R_{ui}R_{uj}}
+{\sqrt{\sum_{u \in I_i \cap I_j}R_{ui}^2}\sqrt{\sum_{u \in I_i \cap I_j }R_{uj}^2}}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def cos(u,v):
+    """
+    Cosine similarity between two vectors 
+    calculated on the elements which are not None in both vectors. 
+    """
+    J_u = np.where(~np.isnan(u))
+    J_v = np.where(~np.isnan(v))
+    J_uv = np.intersect1d(J_u, J_v)
+    if J_uv.size >0:
+        v_u = u[J_uv]
+        v_v = v[J_uv]
+        norm = np.linalg.norm(v_u)*np.linalg.norm(v_v)
+        
+        if norm>0:
+            return np.dot(v_u,v_v)/norm
+        else:
+            return 0
+        
+    return np.NAN    
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Cosine similarity between items rated by user $11$ and item $4$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+c_sim= np.asarray(list(map(lambda c: (c,cos(R[:,c], R[:,4]), R[11,c]), rated_items)))
+c_sim
+```
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+## Prediction
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': ''}, editable=TRUE}
+Image(filename='item_based_prediction.png') 
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from [Item-based collaborative filtering recommendation algorithms](https://dl.acm.org/doi/pdf/10.1145/371920.372071).
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$\newcommand{\argsort}{\operatorname*{argsort}}$$
+$$P_i(u) = \text{top }k\text{ elements from }\argsort_{j}\{\Sim(i,j): R_{uj} \text{ is not nan } \wedge \Sim(i,j)>0\}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def P_item(sim,R,u,i,k=5):
+  """
+  """
+  p = []
+  score = []
+  for j in range(len(R[u])):
+    if np.isnan(R[u,j]):
+      continue
+    s = sim(R[:,i],R[:,j])
+    if s>0:
+      p.append(j)
+      score.append(s)
+        
+  score = np.asarray(score)
+  p = np.asarray(p)
+  ord = np.argsort(score)[::-1][:min(k,len(p))]
+  return p[ord],score[ord]        
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+P_item(pearson,R,11,4)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+Image(filename='item_based_prediction.png')
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from [Item-based collaborative filtering recommendation algorithms](https://dl.acm.org/doi/pdf/10.1145/371920.372071).
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+$$\hat{R}_{ui}=\frac
+{\sum_{j \in P_i(u)}\Sim(i,j)  R_{uj}}
+{\sum_{j \in P_i(u)}\Sim(i,j)}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+p_sim
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+N=p_sim[:,1]>0
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+np.sum(p_sim[N,1]*p_sim[N,2])/p_sim[N,1].sum()
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+R_true[11,4]
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+N=c_sim[:,1]>0
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+np.sum(c_sim[N,1]*p_sim[N,2])/c_sim[N,1].sum()
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+R_true[11,4]
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def pred_item(sim, R, u, adjust):
+    """
+    Predict ratings for all item not rated by the user u
+    """
+    ratings = []
+    for i,r in enumerate(R[u]):
+        if ~np.isnan(r):
+          ratings.append(r);
+        else:
+          p,s = P_item(sim, R,u,i)
+          if p.size>0:
+            hat  = np.dot(s,R[u,p])/s.sum()  
+          else:
+            hat = np.NAN
+          ratings.append(hat)
+                
+    return ratings
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+pred_item(pearson,R, 11, False)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+R_true[11]
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+def pred_item_all(sim, R,adjust=False):
+  r_hat = []
+  for u in  range(len(R)):
+    r_hat.append(pred_item(sim,R,u,adjust))
+  return np.array(r_hat)  
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+R_hat = pred_item_all(pearson,R)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}, raw_mimetype=""}
+print(R_hat)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def RMSE(R_true, R, R_hat):
+    nans = np.where(np.isnan(R))
+    e = R_true[nans]-R_hat[nans]
+    return np.sqrt(np.nanmean(e*e))
+
+def MAE(R_true, R, R_hat):
+    nans = np.where(np.isnan(R))
+    e = R_true[nans]-R_hat[nans]
+    return np.nanmean(np.abs(e))
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R, R_hat)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+RMSE(R_true, R, R_hat)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+R_hat = pred_item_all(cos,R, False)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+print(R_hat)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R, R_hat)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+### Adjusted  cosine similarity
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Average rating of the user $u$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$\mu_u = \frac{\sum_{i\in J_u} R_{ui}}{|J_u|},\quad  J_u  = \{i:R_{ui}\text{ is not nan }\}$$ 
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$\operatorname{adjusted-cos}(i,j) = \frac{\sum_{u \in I_i \cap I_j}(R_{iu}-\mu_u)(R_{ju}-\mu_u)}
+{\sqrt{\sum_{u \in I_i \cap I_j}(R_{iu}-\mu_u)^2}\sqrt{\sum_{u \in I_i \cap I_j }(R_{ju}-\mu_u)^2}}$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+def adjusted_cos(u,v):
+    mu = np.nanmean(R,1)
+    return cos(u-mu, v-mu)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+R_hat = pred_item_all(adjusted_cos,R, False)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+print(R_hat)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R, R_hat)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+## Regression based prediction
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+$$R'_{uj}=\alpha_j R_{ui}+\beta_j$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+from scipy.stats import linregress
+def regression(u,v):
+    J_u = np.where(~np.isnan(u))
+    J_v = np.where(~np.isnan(v))
+    J_uv = np.intersect1d(J_u, J_v)
+    
+    if J_uv.size >0:
+        v_u = u[J_uv]
+        v_v = v[J_uv]
+        try:
+            lr = linregress(v_v,v_u)
+        except ValueError:
+            return np.nan
+        return lr.slope, lr.intercept
+    return np.NAN    
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def P_item_reg(sim,R,u,i,k=5):
+  """
+  """
+  p = []
+  score = []
+  reg = []
+  for j in range(len(R[u])):
+    if np.isnan(R[u,j]):
+      continue
+    s = sim(R[:,i],R[:,j])
+    if s>0:
+      p.append(j)
+      score.append(s)
+      reg.append(regression(R[:,i],R[:,j]))
+        
+  score = np.asarray(score)
+  p = np.asarray(p)
+  reg = np.array(reg)
+  ord = np.argsort(score)[::-1][:min(k,len(p))]
+  return p[ord],score[ord],reg[ord]        
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+P_item_reg(pearson,R,11,4)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+def pred_item_reg(sim, R, u, adjust):
+    """
+    Predict ratings for all item not rated by the user u
+    """
+    ratings = []
+    for i,r in enumerate(R[u]):
+        if ~np.isnan(r):
+          ratings.append(r);
+        else:
+          p,s,reg = P_item_reg(sim, R,u,i)
+          if p.size>0:
+            hat = 0 
+            for j,i in enumerate(p):
+              lr = reg[j]
+              a=1;b=0 
+              if ~np.isnan(lr).any():
+                a,b=lr
+              hat  += s[j]*(a*R[u,i]+b)
+            hat/=s.sum()      
+          else:
+            hat = np.NAN
+          ratings.append(hat)
+    return ratings
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+pred_item_reg(pearson,R,11,4)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+def pred_item_reg_all(sim, R,adjust=False):
+  r_hat = []
+  for u in  range(len(R)):
+    r_hat.append(pred_item_reg(sim,R,u,adjust))
+  return np.array(r_hat)  
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+R_hat = pred_item_reg_all(pearson, R)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R, R_hat)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+R_hat = pred_item_reg_all(cos, R)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R, R_hat)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+R_hat = pred_item_reg_all(adjusted_cos, R)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+MAE(R_true, R,R_hat)
+```
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+## Model-Based
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+Image(filename='model_based.png')
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from Charu C. Argval "Recommender Systems" Springer International Publishing Switzerland 2016
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+## Latent factor models
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
+Image(filename='latent_factors.png')
+```
+
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
+Figure from Charu C. Argval "Recommender Systems" Springer International Publishing Switzerland 2016
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+$$R: \quad M\times N$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$R \approx U\cdot V^T$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+$$\text{user factors } U:\; M\times K,\quad \text{ item factors }V:\; N\times K$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\hat{R}_{ui} = \sum_{k}U_{uk}V_{ik}$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "slide"} -->
+$$\operatorname{loss}(U,V)=\sum_{u}\sum_{i \in J_u}
+\left(R_{ui}- (U\cdot V^T)_{uj}\right)^2 = \sum_{u}\sum_{i \in J_u}
+\left(R_{ui}- \sum_{k}U_{uk}V_{ik}\right)^2$$
+<!-- #endregion -->
+
+<!-- #region slideshow={"slide_type": "fragment"} -->
+$$\operatorname{loss}(U,V)=\sum_{u}\sum_{i \in J_u}
+\left(R_{ui}- \sum_{k}U_{uk}V_{ik}\right)^2
++\frac{\lambda}{2}\sum_{uk}U_{uk}^2 +\frac{\lambda}{2}\sum_{ik}V_{ik}^2 
+$$
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'slide'}}
+import torch
+import torch.nn as nn
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+n_components = 2
+U = torch.rand(n_users,n_components)
+V = torch.rand(n_items,n_components)
+U.requires_grad_(True)
+V.requires_grad_(True);
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+R_t = torch.from_numpy(R)
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+non_null =torch.where(~torch.isnan(R_t))
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+optim = torch.optim.Adam([U,V],lr=0.01)
+lam =0.5
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+for e in range(10000):
+    optim.zero_grad()
+    err = R_t[non_null]-(U@V.T)[non_null]
+    loss = torch.sum(err*err) + lam*torch.sum(U*U)+lam*torch.sum(V*V)
+    loss.backward()
+    optim.step()
+print(loss.item())    
+```
+
+```{python slideshow={'slide_type': 'fragment'}}
+R_hat = (U@V.T).detach().numpy()
+```
+
+```{python slideshow={'slide_type': 'skip'}}
+R_true
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+R_hat
+```
+
+```{python}
+MAE(R_true, R, R_hat)
+```
+
+```{python slideshow={'slide_type': 'slide'}}
+c = np.array(['red','blue'])
+plt.scatter(V[:,0].detach(), V[:,1].detach(), c = c[categories]);
+```
+
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+user_colors = np.concatenate( (users/3,np.zeros((n_users,1)) ),1)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+plt.scatter(U[:,0].detach(), U[:,1].detach(),c=user_colors);
+```

@@ -18,11 +18,15 @@ jupyter:
 
 The task in this assignment is to detect the  counterfeit banknotes. The data set is based on [banknote authentication Data Set ](https://archive.ics.uci.edu/ml/datasets/banknote+authentication#) from UCI Machine Learning repository.  You have already used this set but this time I have removed  the first column. The set  `banknote_authentication.csv` can be found in the `data`  directory.
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as st
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+data = pd.read_csv('data/banknote_authentication.csv', header=None)
 ```
 
 ```{python}
@@ -59,7 +63,8 @@ Use k-fold cross validation to find the optimal number of gaussian components fo
 __Hint__ use the `StratifiedKFold` function from scikit-learn library to generate folds. 
 <!-- #endregion -->
 
+<!-- #region editable=true slideshow={"slide_type": ""} -->
 ## D.  
-
+<!-- #endregion -->
 
 Assume that 1% of all the customers in your store try to pay with a counterfeit 100PLN bill. If you accept the counterfeit bill you loose 100PLN. If you reject a valid bill,  you may loose the purchase, you estimate this loss as 15PLN on average. For each of the three classifiers find the threshold that minimises your losses and calculates the minimum loss for each classifier. Show the optimal classifiers points on the ROC curves.

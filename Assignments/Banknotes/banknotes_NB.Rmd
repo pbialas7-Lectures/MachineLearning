@@ -25,7 +25,7 @@ import matplotlib.pyplot as plt
 import scipy.stats as st
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 from sklearn.metrics import classification_report, ConfusionMatrixDisplay
 ```
 
