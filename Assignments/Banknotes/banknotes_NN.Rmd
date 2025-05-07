@@ -126,6 +126,6 @@ with torch.no_grad():
 accuracy_score(y_true, y_pred=y_predicted)
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```
