@@ -5,33 +5,34 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 #  Unsupervised learning
 <!-- #endregion -->
 
-```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}, editable=TRUE}
 # %load_ext autoreload
 # %autoreload 2
 ```
 
-```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}, editable=TRUE}
 import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
 import pandas as pd
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = [12,8]
+figsize=(10,6)
+plt.rcParams["figure.figsize"] = figsize
 plt.rcParams["animation.html"] = "jshtml"
 ```
 
-```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}, editable=TRUE}
 import sys
 sys.path.append('../..')
 ```
@@ -127,39 +128,40 @@ hw_gm.fit(hw_train[['Height','Weight']])
 Let's look at the found clusters 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from mchlearn.plotting import confidence_ellipse
 plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2, color='grey');
 colors=['red', 'blue']
 for i in range(2):
-    confidence_ellipse(hw_gm.means_[i], hw_gm.covariances_[i], ax = plt.gca(), edgecolor=colors[i], label =f"{hw_gm.weights_[i]:5.3f}");
+    confidence_ellipse(hw_gm.means_[i], hw_gm.covariances_[i], ax = plt.gca(), 
+                       edgecolor=colors[i], label =f"{hw_gm.weights_[i]:5.3f}");
     plt.scatter(*np.split(hw_gm.means_,2,1), facecolors=colors)
-plt.legend(title='$\pi_k$');    
+plt.legend(title='$\\pi_k$');    
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Looks very reasonable :) 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Please recall that the because of the unidentifiability  of the parameters the particular assignment of labels to clusters is meaningless. That's a knowledge that we have to put in "by hand". Below I choose the women cluster as the one with smaller average height. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 female = np.argmin(hw_gm.means_[:,0])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Let's compare the results to the separate fit to each cluster _i.e._ quadratic discriminant analysis
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.discriminant_analysis import QuadraticDiscriminantAnalysis
 qda = QuadraticDiscriminantAnalysis(store_covariance=True)
 qda.fit(hw_train[['Height','Weight']], hw_train.Gender=='Female')
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from mchlearn.plotting import confidence_ellipse
 plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2, color='grey');
 qda_colors = [colors[1-female],colors[female]]
@@ -168,10 +170,10 @@ for i in range(2):
     plt.scatter(*np.split(hw_gm.means_,2,1), facecolors=colors)
     confidence_ellipse(qda.means_[i], qda.covariance_[i], ax = plt.gca(), edgecolor=qda_colors[i], label =f"{qda.priors_[i]:5.3f} QDA", linestyle='--');
     plt.scatter(*np.split(qda.means_,2,1), edgecolors=qda_colors, facecolors='none')
-plt.legend(title='$\pi_k$');    
+plt.legend(title='$\\pi_k$');    
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 As we can see the results are very similar. We can use those (EM fitted) cluster for classification
 <!-- #endregion -->
 
@@ -240,62 +242,71 @@ and indeed we get a bigger, hence worse value.
 Let's compare this to fit with three clusters
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 hw_gm3 = GaussianMixture(n_components=3, tol=1e-5, n_init=3)
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 hw_gm3.fit(hw_train[['Height', 'Weight']])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Looking at the fitted clusters
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 from mchlearn.plotting import confidence_ellipse
 plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2);
 cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
 for i in range(3):
     confidence_ellipse(hw_gm3.means_[i], hw_gm3.covariances_[i], ax = plt.gca(), edgecolor=cycle[i], label =f"{hw_gm3.weights_[i]:5.3f}");
-plt.legend(title='$\pi_k$');    
+plt.legend(title='$\\pi_k$');    
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 we see that there is not a clear interpretation to be given to different clusters and that their weights are similar. Let's see how good is the fit
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 print(f"2 clusters {-hw_gm.score(hw_test[['Height', 'Weight']]):6.4f}  3 clusters {-hw_gm3.score(hw_test[['Height', 'Weight']]):6.4f}")
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We see that it is only marginally different then in case of two clusters. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Cross validation
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Actually we  should also not use the test set for choosing the number of components.  We should use a separate validation set. If we  do not have enough data we can recourse to cross valdation
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 hw_gm1 = GaussianMixture(n_components=1, tol=1e-5, n_init=3)
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 hw_gm1.fit(hw_train[['Height', 'Weight']])
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+from mchlearn.plotting import confidence_ellipse
+plt.scatter(hw_train['Height'], hw_train['Weight'], alpha=0.2);
+cycle = plt.rcParams['axes.prop_cycle'].by_key()['color']
+for i in range(1):
+    confidence_ellipse(hw_gm1.means_[i], hw_gm1.covariances_[i], ax = plt.gca(), edgecolor=cycle[i], label =f"{hw_gm1.weights_[i]:5.3f}");
+plt.legend(title='$\\pi_k$');    
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.model_selection import cross_validate
 cv1 = cross_validate(hw_gm1, hw_train[['Height', 'Weight']])
 print(cv1)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 from sklearn.model_selection import cross_validate
 cv2 = cross_validate(hw_gm, hw_train[['Height', 'Weight']])
 print(cv2)
@@ -310,6 +321,6 @@ print(cv3)
 print(f"1 cluster {-cv1['test_score'].mean():6.4f} 2 clusters {-cv2['test_score'].mean():6.4f}  3 clusters {-cv3['test_score'].mean():6.4f}")
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We see that the results are almost indistinguishable. But note that their are also different from the values obtained on the test set. That's because all of those are  statistical estimators so actually they are random variables themself :( The  estimate of variance of those estimators  is  difficult  and beyond the subject of this lecture. Interested readers may consult [No Unbiased Estimator of the Variance of K-Fold Cross-Validation](http://www.jmlr.org/papers/volume5/grandvalet04a/grandvalet04a.pdf).
 <!-- #endregion -->

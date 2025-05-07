@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -17,12 +17,17 @@ jupyter:
 # %autoreload 2
 ```
 
-```{python tags=c("hide"), slideshow={'slide_type': 'skip'}}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
+import matplotlib
+matplotlib.rcParams['animation.embed_limit'] = 2**26
+```
+
+```{python tags=c("hide"), slideshow={'slide_type': 'skip'}, editable=TRUE}
 import numpy as np
 import scipy.stats as st
 import matplotlib.pyplot as plt
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = [12,8]
+plt.rcParams["figure.figsize"] = [10,6]
 plt.rcParams["animation.html"] = "jshtml"
 ```
 
@@ -160,9 +165,9 @@ def p_mix(x):
 fig, ax = plt.subplots()
 xs = np.linspace(-5,5,500)
 pdf = g.pdf(xs.reshape(-1,1))
-ax.plot(xs, (1-pi)*pdf[:,0]+pi*pdf[:,1],label = '$\pi \cdot  p(x|\mu_1,\sigma_1) +  (1-\pi) \cdot p(x|\mu_0,\sigma_0)$')
-ax.plot(xs, (1-pi)*pdf[:,0], label = '$(1-\pi) \cdot  p(x|\mu_0,\sigma_0)$');
-ax.plot(xs, pi*pdf[:,1], label = '$\pi \cdot  p(x|\mu_1,\sigma_1)$');
+ax.plot(xs, (1-pi)*pdf[:,0]+pi*pdf[:,1],label = r'$\pi \cdot  p(x|\mu_1,\sigma_1) +  (1-\pi) \cdot p(x|\mu_0,\sigma_0)$')
+ax.plot(xs, (1-pi)*pdf[:,0], label = r'$(1-\pi) \cdot  p(x|\mu_0,\sigma_0)$');
+ax.plot(xs, pi*pdf[:,1], label = r'$\pi \cdot  p(x|\mu_1,\sigma_1)$');
 ax.legend(loc = 2);
 plt.close()
 ```
@@ -526,7 +531,7 @@ Below are plots showing the convergence of all parameters.
 
 ```{python slideshow={'slide_type': 'skip'}}
 fig, ax = plt.subplots()
-ax.scatter(range(len(thetas)), thetas[:,0], s=10, alpha=0.5, label='$\pi$');
+ax.scatter(range(len(thetas)), thetas[:,0], s=10, alpha=0.5, label=r'$\pi$');
 ax.axhline(0.3);
 ax.axhline(0.7);
 ax.legend();
@@ -543,9 +548,9 @@ fig
 
 ```{python slideshow={'slide_type': 'skip'}}
 fig, ax = plt.subplots()
-ax.scatter(range(len(thetas)), thetas[:,1], s=10, alpha=0.5, label = "$\mu_1$", color = 'blue');
+ax.scatter(range(len(thetas)), thetas[:,1], s=10, alpha=0.5, label = r"$\mu_1$", color = 'blue');
 ax.axhline(mus[0], color = 'blue')
-ax.scatter(range(len(thetas)), thetas[:,3], s=10, alpha=0.5, label = "$\mu_2$", color = 'orange');
+ax.scatter(range(len(thetas)), thetas[:,3], s=10, alpha=0.5, label = r"$\mu_2$", color = 'orange');
 ax.axhline(mus[1], color='orange');
 ax.legend();
 plt.close()
@@ -561,9 +566,9 @@ fig
 
 ```{python slideshow={'slide_type': 'skip'}}
 fig, ax = plt.subplots()
-ax.scatter(range(len(thetas)), thetas[:,2], s=10, alpha=0.5, label = "$\sigma_1$", color = 'blue');
+ax.scatter(range(len(thetas)), thetas[:,2], s=10, alpha=0.5, label = r"$\sigma_1$", color = 'blue');
 ax.axhline(stds[0], color = 'blue')
-ax.scatter(range(len(thetas)), thetas[:,4], s=10, alpha=0.5, label = "$\sigma_2$", color = 'orange');
+ax.scatter(range(len(thetas)), thetas[:,4], s=10, alpha=0.5, label = r"$\sigma_2$", color = 'orange');
 ax.axhline(stds[1], color='orange');
 ax.legend();
 plt.close()
@@ -609,7 +614,7 @@ As you can see we gain most from the first step.
 Below is a  simple animation of the whole process
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 # %%capture
 from matplotlib.animation import FuncAnimation
 xs = np.linspace(-5,5,500)
@@ -633,12 +638,12 @@ def animate(theta):
 anim = FuncAnimation(fig, animate, thetas, repeat=False, interval=80)    
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 ## Can take ~15 seconds to prepare
 anim
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 ## Notes on the convergence
 <!-- #endregion -->
 
@@ -698,24 +703,6 @@ def valid_thetas(th):
     return v_th[s_th]
 ```
 
-```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
-def singular(theta):
-    for i in range(100):
-        z = expectation_stable(ds,theta)
-        theta = maximization(ds,z)
-        if is_nan(theta):
-            return i
-    return False    
-```
-
-```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
-for i in range(50):
-    theta = [0.5, ds[3],  0.4, ds[i], 0.11]
-    l = singular(theta)
-    if l:
-        print(i,l, theta)
-```
-
 ```{python slideshow={'slide_type': 'skip'}}
 theta = [0.5, ds[3],  0.4, ds[9], 0.121]
 ```
@@ -758,36 +745,6 @@ fig, ax = plt.subplots(1,3, figsize=(19,6))
 plot(thetas[5],ax[0])
 plot(thetas[6],ax[1])
 plot(thetas[7],ax[2])
-```
-
-```{python tags=c("skip"), slideshow={'slide_type': 'skip'}}
-# %%capture
-from matplotlib.animation import FuncAnimation
-x_extent = (-4,4)
-xs = np.linspace(*x_extent,5000)
-fig, ax = plt.subplots()
-ax.set_ylim(0,3)
-ax.set_xlim(*x_extent)
-l1, = plt.plot(x_extent,[0,0], color='blue')
-l2, = plt.plot(x_extent,[0,0], color='red')
-l3, = plt.plot(x_extent,[0,0], color='green')
-plt.hist(ds, bins=16,  density=True, histtype='step', color='green', range=x_extent)
-#plt.stem(ds, np.ones_like(ds), markerfmt='none')
-
-
-def animate(theta):
-    pi, m1, s1, m2,s2 = theta
-    d2 = pi*st.norm(loc=m2, scale=s2).pdf(xs)
-    d1 = (1-pi)*st.norm(loc=m1, scale=s1).pdf(xs)
-    l1.set_data(xs,d1)
-    l2.set_data(xs,d2)
-    #l3.set_data(xs,d1+d2)
-    
-anim = FuncAnimation(fig, animate, valid_thetas(thetas), repeat=False, interval=1000)    
-```
-
-```{python tags=c("skip"), slideshow={'slide_type': 'slide'}}
-anim
 ```
 
 <!-- #region slideshow={"slide_type": "skip"} -->
@@ -1057,10 +1014,6 @@ fig
 ## Choosing the number of components
 <!-- #endregion -->
 
-<!-- #region tags=["skip"] slideshow={"slide_type": "skip"} -->
-In the example above we have somewhat arbitrarly choosen the number of gaussian components to be two for each class. This was justified by the shape of the distribution. However in general case we would be unable to look at the high dimensional data. It's obvious that choosing a bigger number of componets will better model the _training_ data. But at certain point it will overfit and start degrading the performace of the classifier on the test set. As with other hyperparameters, one way of  searching for best number of components is to use grid search with cross validation. 
-<!-- #endregion -->
-
 <!-- #region slideshow={"slide_type": "skip"} -->
 Unfortunatelly we cannot use the scikit-learn functionality  described in text analysis notebook because our classifier does not conform to the expected interface.  We can either make our own cross validation search using e.g. scikit-learn [`KFold`](https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.KFold.html) or `StratifiedKFold` classes or write our own classifier in a way conformant to the scikit-learn interface. 
 <!-- #endregion -->
@@ -1111,13 +1064,13 @@ folder = KFold(5,shuffle=True, random_state=67544)
 folder.get_n_splits()
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 f1=0
 for train_i, test_i in folder.split(hc_train, hc_lbl_train):
-    f1+=evaluate(5,5,hc_train[train_i], hc_lbl_train[train_i], hc_train[test_i], hc_lbl_train[test_i])
+    f1+=evaluate(2,2,hc_train[train_i], hc_lbl_train[train_i], hc_train[test_i], hc_lbl_train[test_i])
 print(f1/folder.get_n_splits())
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 
 ```

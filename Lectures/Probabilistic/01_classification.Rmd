@@ -6,24 +6,24 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 ```
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 #This ensures that the plots are displayes automatically without need to call plt.show().
 # %matplotlib inline
-fig_height = 10
-fig_width =15
+fig_height = 6
+fig_width =10
 plt.rcParams["figure.figsize"] = [fig_width, fig_height] #Setting the default figure size for  plotting.
 ```
 
@@ -44,7 +44,7 @@ that given the features  $d$ the class is $c$.
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "notes"}} -->
-It is more useful to talk  about the probability then  a deterministic  classifier function such that $f(d)=c$. In most real life scenarios such function just does not exists. E.g. when approving a loan we have no way of knowing for certain that particular person will repay or not his loan regardless of the information we have on him. We can only  to some degree estimate the probability of that event. If have a reliable estimate of this conditional probability we can use it to make decision(clasification) but  e.g. choose the amount of risk we are willing to take. 
+It is more useful to talk  about the probability then  a deterministic  classifier function such that $f(d)=c$. In most real life scenarios such function just does not exists. E.g. when approving a loan we have no way of knowing for certain that particular person will repay or not his loan regardless of the information we have on him. We can only  to some degree estimate the probability of that event. If have a reliable estimate of this conditional probability we can use it to make decision(clasification) but  also choose the amount of risk we are willing to take. 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
@@ -64,7 +64,7 @@ $$P(C=c,D=d)$$
 Once we have it we can calculate the conditional probability directly from the definition
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$P(C=c|D=d)=\frac{P(C=c,D=d)}{P(D=d)}$$
 <!-- #endregion -->
 
@@ -76,24 +76,24 @@ $$P(C=c|D=d)=\frac{P(C=c,D=d)}{P(D=d)}$$
 In practice it is often easier to use the Bayes theorem
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$\boxed{P(C=c|D=d) = \frac{P(D=d|C)P(C=c)}{P(D=d)}}$$
 $$P(D=d)=\sum_c P(D=d|C=c)P(C=c)$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 In other words we are factoring the joint probability in two parts
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$P(C=c, D=d)= P(D=d|C=c)\cdot P(C=c)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
 __Sampling distribution__
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 The first factor  
 <!-- #endregion -->
 
@@ -101,31 +101,31 @@ The first factor
 $$P(D=d|C=c)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 when viewed as the function of $d$ is called the _sampling distributions_ as it describes the distribution of samples in class $c$. Knowledge of $P(D=d|C=c)$ is the knowledge of how to generate the data. We can say we have a model of our data generation process. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 __Prior__
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": ""}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
 $$P(C=c)$$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 is an  _a priori_ (prior) probability y of $C=c$ before we gather any data.  That's the knowledge we had about random variable $C$ beforehand. That  usually reflects the frequency of occurence of classes in the data. For example it may be a fraction of people that repay their loans. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
 ## Bayes classifier
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 Given this probability we can construct a classifier _e.g._ by chosing the class with highest probability
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$\newcommand{\argmax}{\operatorname{argmax}}$$
 $$\begin{split}
 c &=  \argmax_{c} \frac{P(D=d|C=c)P(C=c)}{P(D=d)}\\
@@ -133,19 +133,19 @@ c &=  \argmax_{c} \frac{P(D=d|C=c)P(C=c)}{P(D=d)}\\
 \end{split}$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 Please note that for that kind of classifier  we do not need to calculate the denominator. However in the next section we will see that having a proper probability distribution allows us to construct a whole familly of classifiers. We are not restricted to choosing the one above.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
 ## Example: Estimating sex of a person based on it's height
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 Let's consider classfication of persons as women and men based on their height. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 In this case $D$ is the height of a person and we will denote it by $H$,  $C$ is the sex of a person and we will denote it by $S$.We will be looking for the conditional probability
 <!-- #endregion -->
 
@@ -153,23 +153,23 @@ In this case $D$ is the height of a person and we will denote it by $H$,  $C$ is
 $$P(S=s|H=h)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "tags": ["text"], "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}, "tags": ["text"]} -->
 We will assume that for each sex the height distribution is Gaussian (we will check this assumption later)
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$P(H=h|S=s) \sim  \mathcal{N}(\mu_s,\sigma_s)$$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 I will use $\sim$ symbol to denote that the probability on left-hand side is equal to probability density function (pmf) or probability mass function (pmf) of the distribution on the right-hand side. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 To model this we will use  `stats` module from `scipy` which we have imported at the begining of the notebook.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 pd_h_cond_F = st.norm(166,6.1)
 pd_h_cond_M = st.norm(178,7)
 ```
@@ -262,11 +262,11 @@ How does this probability change when the _a priori_ probabilities are not equal
 #### Answer
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 This is not necessary but I will  define a function that creates a desired probability distribution:
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'slide'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), jupyter={'source_hidden': True}}
 def make_pdf_F_cond_h(p_F):
     p_M = 1-p_F
     def pdf(h):
@@ -275,11 +275,11 @@ def make_pdf_F_cond_h(p_F):
     return pdf
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 This function returns another function so it is an example of [_higher order function_](https://en.wikipedia.org/wiki/Higher-order_function). The returned function is actually a [_closure_](https://simple.wikipedia.org/wiki/Closure_(computer_science)) as it remembers (closes over) the value of ```p_F```. 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'slide'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), jupyter={'source_hidden': True}}
 pdf_F_cond_fac = make_pdf_F_cond_h(0.25)
 ```
 
@@ -297,7 +297,7 @@ threshold_fac = fsolve(lambda h: pdf_F_cond_fac(h)-0.5, 160)
 print(f"{threshold_fac.item():5.1f}cm")
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "notes"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 As the women are now more rare  the treshold is now considerably lower. In extreme case if $P(S=f)=0$, think _e.g._ about all-boy's schools, then whathever  the height of the person, it has to be a man and treshold would be zero. 
 <!-- #endregion -->
 
@@ -306,7 +306,7 @@ As the women are now more rare  the treshold is now considerably lower. In extre
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "notes"}} -->
-Of course this is very crude classifier. There are tall women and small men and classifier will make errors. Please note that those error are inherent in the problem, height by itself just does not provide enough information. But notion of error  as well as the concept of the  optimal classifier  requires some explanations. This we will discuss in the next section. 
+Of course this is very crude classifier. There are tall women and short men so the classifier will make errors. Please note that those error are inherent in the problem, height by itself just does not provide enough information. But notion of error  as well as the concept of the  optimal classifier  requires some explanations. This we will discuss in the next section. 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
@@ -411,11 +411,11 @@ Consider a rare disease (1 in 250 persons) and a test that has 0.8 true positive
 __a__) 
 Calculate the accuracy and precision and F1 score of the test . 
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
 __Answer__
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 We can rewrite accuracy as 
 $$\frac{TP+TN}{P+N} = \frac{TPR\cdot P +TN\cdot N}{P+N} = \frac{TPR\cdot P }{P+N}+  \frac{TN\cdot N}{P+N} = TPR\cdot P(P)+TNR \cdot P(N)$$
 
@@ -424,7 +424,7 @@ We know that
 $$TPR=0.8,\quad P(P)=0.004,\quad P(N)=0.996,\quad TNR=(1-FPR)=0.9$$ 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 TPR = 0.8
 FPR =0.1
 PP = 0.004
@@ -432,16 +432,16 @@ PN = 1-PP
 TNR = (1-FPR) 
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 Giving finaly 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 accuracy =  TPR *PP +TNR *PN
 print("Accuracy = {:.4f}".format(accuracy))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 Precision can be rewritten as
 
 $$\frac{TP}{TP+FP}=\frac{TPR\cdot P(P)}{TPR\cdot P(P)+FPR\cdot P(N)}$$ 
@@ -450,22 +450,22 @@ After inserting number we obtain.
 
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 precision = TPR*PP/(TPR*PP +FPR*PN)
 print("Precision = {:.4f}".format(precision))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 This is not a coincidence that we have obtained same value as in Base Rate Fallacy problem in the probability notebook. Precision is exactly the conditional probability of being a true positive given that the test outcome is positive. 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 $$F1 = \frac{2\cdot TP}{TP+FP+P} =  \frac{2\cdot TPR\cdot P}{TPR\cdot P+FPR\cdot N+ P}
 =   \frac{2\cdot TPR\cdot P(P)}{TPR\cdot P(P)+FPR\cdot P(N)+P(P)}
 $$
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 2*TPR*PP/(TPR*PP + FPR*PN+PP)
 ```
 
@@ -478,15 +478,15 @@ Are they correct? Calculate the TPR, FPR and precision and F1 score  for this te
 __Answer__
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 For this test we have 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 $$TPR=0.0\quad \text{and }\quad FPR=0.0$$
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 TPR_b = 0.0
 FPR_b = 0.0
 TNR_b = 1-FPR_b
@@ -497,28 +497,28 @@ print(TNR_b)
 For accuracy this gives:
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 accuracy = TPR_b*PP + TNR_b*PN
 print("Accuracy = {:.4f}".format(accuracy))
 ```
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 Precision 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 $$\frac{0}{0+0}$$
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 however is not well defined. By convention we can set it to zero in this case. 
 <!-- #endregion -->
 
-<!-- #region {"tags": ["answer"], "slideshow": {"slide_type": "skip"}, "jupyter": {"source_hidden": true}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "tags": ["answer"], "jupyter": {"source_hidden": true}} -->
 As for the $F_1$ it actually has a well defined value
 <!-- #endregion -->
 
-```{python tags=c("answer"), slideshow={'slide_type': 'skip'}, jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'skip'}, tags=c("answer"), jupyter={'source_hidden': True}}
 f1_b = 2*TPR_b*PP/(TPR_b*PP + FPR_b*PN+PP)
 print("F score = {:4.2f}".format(f1_b))
 ```
@@ -527,7 +527,7 @@ print("F score = {:4.2f}".format(f1_b))
 The above examples are meant to warn you about using the accuracy as a metric in case of the dataset with unbalanced classes _i.e._ sets where one class is much less frequent then the rest. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
 ## Calculating the errors of our "sex from height" classifier. 
 <!-- #endregion -->
 
@@ -536,7 +536,7 @@ In this case  we could actually calculate the desired quantities analitically bu
 As we do not have real data we will use the Monte-Carlo technique. We will start by simulating the heights of 100000 persons with equal number of women and men using the properties of the distribution objects from `scipy.stats`:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 n_samples = 100000
 h_F = pd_h_cond_F.rvs(size = n_samples//2) # rvs stands for random variates - random numbers drawn from the distribution
 h_M = pd_h_cond_M.rvs(size = n_samples//2)
@@ -657,7 +657,7 @@ Function [roc_curve](https://scikit-learn.org/stable/modules/generated/sklearn.m
 fprs, tprs, thds = roc_curve(labels, pdf_F_cond(h_FM)); 
 ```
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 def roc_plot(figsize=[fig_height,fig_height]):
     """Returns figure and axes object for plotting ROC curve
     setting aspect ration to one and labeling the axes.
@@ -669,11 +669,11 @@ def roc_plot(figsize=[fig_height,fig_height]):
     return fig,ax
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 and  returns three arrays containg false positives rates, true positives rates and thresholds which we will use to plot the curve. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 fig, ax = roc_plot()
 
 roc = ax.plot(fprs,tprs, color='blue');
@@ -696,7 +696,7 @@ plt.close();
 fig
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 As we can see we must compromise, the  perfect classfier corresponds to point (0,1) and does not lie on our curve. We can increase TPR but only by increasing FPR. 
 
 In extreme cases we may clasify everybody as men. Then FPR = 0 but also TPR = 0. Other extreme would be to classify everybody as women. Then we have TPR = 1 but also FPR = 1. So the ROC curve always start at (0,0) and ends at (1,1). 
@@ -716,7 +716,7 @@ So how do we chose a point on ROC curve ? That depends on our goals, we need som
 From the definitions: 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "fragment"}} -->
 $$\begin{split}
 FP +FN &= FPR\cdot N + FNR\cdot P \\
 &= FPR\cdot N+ (1-TPR)\cdot P \\
@@ -725,11 +725,11 @@ FP +FN &= FPR\cdot N + FNR\cdot P \\
 $$ 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
 Please remember that positives are women and negatives are men:) The above formula translates into Python
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 errs = fprs*0.5+(1-tprs)*0.5
 ```
 
@@ -737,7 +737,7 @@ errs = fprs*0.5+(1-tprs)*0.5
 We look for the index containing the minimal value which can be used to access corresponding threshold value
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 imin = np.argmin(errs)
 print(imin, thds[imin])
 ```
@@ -811,7 +811,7 @@ A look at the ROC curve shows that we have indeed decreased the false positives 
 fig, ax = roc_plot()
 ax.plot(fprs, tprs, zorder=1)
 ax.scatter([fprs[imin]], [tprs[imin]], c='blue', zorder=2, label='$c_1 = c_2$' );
-ax.scatter([fprs[imin_c]], [tprs[imin_c]], c='red', zorder=2, label="$c_1=1\;c_2=5$");
+ax.scatter([fprs[imin_c]], [tprs[imin_c]], c='red', zorder=2, label="$c_1=1\\;c_2=5$");
 ax.legend();
 ```
 
@@ -853,7 +853,7 @@ which is resonably close to our value. The agreement is not perfect because our 
 ### AUC score
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 As we have learned a probabilistic classifier actually represents a whole familly of classifiers that is parametrized by the classification threshold and can be visualised by the ROC curve. It would be convenient to be able to summarise the performance of this familly with a single number. This can be achieved with _area under the curve_  (AUC) score. As the name implies this is the area under the ROC curve. We can use `roc_auc_score` function from scikit-learn to calculate it. This function takes same arguments as `roc_curve`
 <!-- #endregion -->
 
@@ -861,7 +861,7 @@ As we have learned a probabilistic classifier actually represents a whole famill
 auc = roc_auc_score(labels, pdf_F_cond(h_FM))
 ```
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 fig, ax = roc_plot()
 roc = ax.plot(fprs,tprs);
 ax.fill_between(fprs,tprs,alpha=0.5);
@@ -877,7 +877,7 @@ ax.text(0.7, 0.3, "AUC = %3.2f"%(auc,), fontsize=16 );
 plt.close()
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 fig
 ```
 
@@ -907,6 +907,6 @@ so learning amounts to estimating  this distribution from the data.
 In our case we just took the numbers provided by the Central Statistical Office and assumed (!) that the underlying distribution was normal. Actually this is not true. What I did was to take the data for persons in the age group 20-29 years. Actually the mean and the stadard deviation depends on the age group  droping _e.g._ to 174cm for men in age group 50-59 years. That means that the overall distribution in  the male population cannot be normal. It could be however a good (or good enough approximation). This is impossible to check without the actual data.  Unfotunately I do not have the access to the original data on which those measurments were based. 
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+<!-- #region {"editable": true, "slideshow": {"slide_type": "notes"}} -->
 The only data I could find was [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height). This data set does not contain any description but use of inches and pounds suggests an american or english origin. The data consists of 10000 points each specifying sex, height and weight of one person. I will use this dataset  to estimate the parameters of the $P(H=h|S=s)$ distributions. This will be the subject of teh next classification_naive_bayes  notebook.  
 <!-- #endregion -->

@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -16,21 +16,21 @@ jupyter:
 # Probability
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": ""} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": ""} -->
 >#### "One sees, from this Essay, that the theory of probabilities is basically just common sense reduced to calculus; it makes one appreciate with exactness that which accurate minds feel with a sort of instinct, often without being able to account for it."
 > "Théorie Analytique des Probabilités" Pierre-Simon Laplace
 <!-- #endregion -->
 
-<!-- #region tags=["description"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["description"] -->
 Because they deal with uncertain events, most of the machine learning methods can be framed in the language of probability. 
 In this notebook I will very briefly recall the basics concepts of the probability calculus and introduce the notation I will be using, hopefully consistently, throughout the lecture.
 <!-- #endregion -->
 
-<!-- #region tags=["description"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["description"] -->
 But keep in mind that this is not a supposed to be a textbook  on probability! Please treat this as a list of concepts and definitions that you have to refresh. It will also serve as a brief introduction to various Python packages. But again this is not a tutorial on Python. The code is provided as a guidance for you and it's up to you to lookup  explanantion in documentation if  needed. I  am of course also happy to help. You can consult me on the chat on Teams. 
 <!-- #endregion -->
 
-<!-- #region tags=["description"] editable=true slideshow={"slide_type": "skip"} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["description"] -->
 The lecture includes some simple problems to help you check your understanding of the subject. Some problems have answers right in the notebook. I will try to hide the content of this cells, please try to solve the problem before looking at the answer. 
 <!-- #endregion -->
 
@@ -162,7 +162,7 @@ $$P(A_1\cup A_2\cup\cdots \cup A_k) = P(A_1)+P(A_2) + \cdots + P(A_k)\qquad i\ne
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": "skip"} -->
-    An important colorary is that when the set of outcomes is countable the probability of an event $A$ is the sum of the probabilities for each elementary event contained in $A$:
+An important colorary is that when the set of outcomes is countable the probability of an event $A$ is the sum of the probabilities for each elementary event contained in $A$:
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": "fragment"} -->
@@ -207,20 +207,12 @@ $$P(S\setminus A)= 1-P(A)\text{ where } S\setminus A = \{s\in S: s\notin A\}$$
 __Answer__
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 It follows directly from the second and third axiom after noting that
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "slide"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} tags=["answer"] jupyter={"source_hidden": true} -->
 $$(S\setminus A) \cup A = S \text{ and } (S\setminus A) \cap A = \varnothing$$
-<!-- #endregion -->
-
-<!-- #region editable=true slideshow={"slide_type": "slide"} -->
-## Law of large numbers
-<!-- #endregion -->
-
-<!-- #region editable=true slideshow={"slide_type": "skip"} -->
-The connection between $P(A)$ and "reality" is made by the [law of large numbers](https://en.wikipedia.org/wiki/Law_of_large_numbers). Losely speaking it states that if we observe our process many times, the frequency  of occurence of an event $A$ will be proportional to the probability $P(A)$. This is the fundation of the frequentionist interpretation of probability. 
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": "slide"} -->
@@ -229,6 +221,10 @@ The connection between $P(A)$ and "reality" is made by the [law of large numbers
 
 <!-- #region editable=true slideshow={"slide_type": "skip"} -->
 The concept of the probability can be somewhat hazy and verges upon philosophy. My take on this is that to calculate the probability we need a _model_ of the process. E.g. for the dice example the model is that all elementary events are equally probable, leading to assignement of probability $1/36$ to every possible two dice roll outcome. 
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+## Law of large numbers
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": "skip"} -->
@@ -336,29 +332,11 @@ So this is smaller  then $P(A)=5/36$.
 __1.__ What if we are told that we have rolled one on one die? Has the conditional probability of rolling six changed? 
 <!-- #endregion -->
 
-```{python tags=c("remove", "skip"), editable=TRUE, slideshow={'slide_type': 'skip'}}
-B1 = set( filter(lambda s: s[0]==1 or s[1]==1 , S_dice) )
-A_cap_B1 = A.intersection(B1)
-```
-
-```{python tags=c("remove", "skip"), editable=TRUE, slideshow={'slide_type': 'skip'}}
-Fraction(len(A_cap_B1), len(B1))
-```
-
 <!-- #region editable=true slideshow={"slide_type": ""} -->
 __2.__ Calculate the conditional probability 
 $$P(d_1 + d_2 = 6\, |\, d_1 = i \vee d_2 = i)\quad\text{for}\;\; i=1,\ldots,6$$
 where $d_1$ and $d_2$ are the outcomes of fisrt and second dice roll respetcively. 
 <!-- #endregion -->
-
-```{python tags=c("remove", "skip"), editable=TRUE, slideshow={'slide_type': 'skip'}}
-Bi = [set( filter(lambda s: s[0]==i or s[1]==i , S_dice) ) for i in range(1,7)]
-A_cap_Bi = [A.intersection(s) for s in Bi]
-```
-
-```{python tags=c("remove", "skip"), editable=TRUE, slideshow={'slide_type': 'skip'}}
-[Fraction(len(n),len(d)) for n,d in zip(A_cap_Bi, Bi)]
-```
 
 <!-- #region editable=true slideshow={"slide_type": "skip"} -->
 The product rule 
@@ -519,7 +497,7 @@ plt.rcParams["figure.figsize"] = [12,8]
 We can plot the whole family of plots corresponding to different values of $P(wash|\neg rain)$
 <!-- #endregion -->
 
-```{python tags=c("hide_src"), editable=TRUE, slideshow={'slide_type': 'skip'}}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}, tags=c("hide_src")}
 ps = np.linspace(0,1,100)
 plt.xlabel("P(rain)")
 plt.ylabel("P(rain|wet)");
@@ -530,11 +508,11 @@ plt.grid()
 plt.legend();
 ```
 
-<!-- #region slideshow={"slide_type": "slide", "slideshow": {"slide_type": "slide"}} tags=["problem"] editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide", "slideshow": {"slide_type": "slide"}} tags=["problem"] -->
 #### Problem: Base rate fallacy
 <!-- #endregion -->
 
-<!-- #region tags=["problem"] editable=true slideshow={"slide_type": ""} -->
+<!-- #region editable=true slideshow={"slide_type": ""} tags=["problem"] -->
 You are tested for a rare disease (1 person in 250). Test has 80%  true positive rate and  10% false positive rate. i.e. test gives positive (you are ill) result for 80% of ill patients and for 10% of healthy patients.   
 
 Your are tested positive, what are the chances you have the disease? 
@@ -544,27 +522,27 @@ Your are tested positive, what are the chances you have the disease?
 #### Answer
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 What we need is the  probability that we are ill on condition that we have been tested positive:
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} tags=["answer"] editable=true jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} tags=["answer"] jupyter={"source_hidden": true} -->
 $$P(ill|P)= \frac{P(P|ill)P(ill)}{P(P)}$$
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 The probability of being ill and tested positive is 
 <!-- #endregion -->
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}, tags=c("answer"), jupyter={'source_hidden': True}}
 p_ill_cond_p = 0.8  
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 The probability of being tested positive is
 <!-- #endregion -->
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "fragment"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "fragment"} tags=["answer"] jupyter={"source_hidden": true} -->
 $$P(P)=P(P|ill)P(ill)+P(P|\neg ill)P(\neg ill)$$
 <!-- #endregion -->
 
@@ -572,24 +550,24 @@ $$P(P)=P(P|ill)P(ill)+P(P|\neg ill)P(\neg ill)$$
 p_ill = 0.004
 ```
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}, tags=c("answer"), jupyter={'source_hidden': True}}
 p_p = 0.8*p_ill + 0.1*(1-p_ill)
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 and finally 
 <!-- #endregion -->
 
-```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': 'fragment'}, jupyter={'source_hidden': True}}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}, tags=c("answer"), jupyter={'source_hidden': True}}
 p_ill_cond_p = p_ill_cond_p*p_ill/p_p
 print("{:4.1f}%".format(100*p_ill_cond_p))
 ```
 
-<!-- #region tags=["answer"] editable=true slideshow={"slide_type": "skip"} jupyter={"source_hidden": true} -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} tags=["answer"] jupyter={"source_hidden": true} -->
 So there is no cause to despair yet :) 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide", "slideshow": {"slide_type": "slide"}} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide", "slideshow": {"slide_type": "slide"}} -->
 ### Increase of information (learning)
 <!-- #endregion -->
 
@@ -597,7 +575,7 @@ So there is no cause to despair yet :)
 One could say that this test is useless if positive  result gives only $3\%$ chance of being ill. And  this particular test was actually discarde but it is not totaly useless. Before taking the test our chance of being ill was $0.4\%$. After seing the positive result it "jumped" more then ten times to $3.1\%$. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "fragment"} -->
 $$0.004 \longrightarrow 0.031$$
 <!-- #endregion -->
 
@@ -605,7 +583,7 @@ $$0.004 \longrightarrow 0.031$$
 After seing a negative result our chances of being ill dropped four times:
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "fragment"} -->
 $$0.004 \longrightarrow 0.001 $$ 
 <!-- #endregion -->
 
@@ -644,3 +622,33 @@ we obtain  a more familiar factorisation criterion for joint probability of inde
 <!-- #region editable=true slideshow={"slide_type": "fragment"} -->
 $$P(A\cap B) = P(A)\cdot P(B)$$
 <!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+## Bertrand paradox
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": ""} -->
+>#### Consider an equilateral triangle that is inscribed in a circle. Suppose a chord of the circle is chosen at random. What is the probability that the chord is longer than a side of the triangle?
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+<div style="text-align: center;">
+    <img src="figures/Bertrand1-figure.svg" style="width:30%;"></img>
+</div>    
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+<div style="text-align: center;">
+    <img src="figures/Bertrand2-figure.svg" style="width:30%;"></img>
+</div>    
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+<div style="text-align: center;">
+    <img src="figures/Bertrand3-figure.svg" style="width:30%;"></img>
+</div>    
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
+```
