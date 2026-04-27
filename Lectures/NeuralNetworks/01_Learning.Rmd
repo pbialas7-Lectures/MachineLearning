@@ -6,7 +6,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -21,10 +21,11 @@ import numpy as np
 For all the visualisations we will be using the matplotlib library:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 import matplotlib.pyplot as plt
 # %matplotlib inline
-plt.rcParams['figure.figsize'] = (10.0, 8.0)
+figsize =(8,5)
+plt.rcParams['figure.figsize'] = figsize
 ```
 
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
@@ -32,7 +33,7 @@ The second line above is an example of jupyter "magic command". This one ensures
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
-## Supervised learning
+# Supervised learning
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "skip"}} -->
@@ -47,7 +48,7 @@ With supervised learning we are presented with a sets of examples consistings of
 $\newcommand{b}[1]{\mathbf{#1}}$
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "fragment"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 $$\begin{array}{ccc}
 \text{features} & & \text{labels}\\
 (x_{0,0},x_{0,1},\ldots,x_{0,N-1}) &\rightarrow &  \left(y_{0,0},y_{0,1},\ldots,y_{0,M-1}\right)\\
@@ -498,7 +499,7 @@ def func(x,a=1,mu=0, sigma=1):
     return np.sqrt(1-x*x)+a*norm(mu, sigma).pdf(x) 
 ```
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python slideshow={'slide_type': ''}, editable=TRUE}
 a=0.02
 mu =0.35333
 sigma = 0.005

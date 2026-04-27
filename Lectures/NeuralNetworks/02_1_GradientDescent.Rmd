@@ -7,7 +7,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -18,7 +18,8 @@ jupyter:
 import numpy as np
 import matplotlib.pyplot as plt
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = (10,8)
+figsize = (8,6)
+plt.rcParams["figure.figsize"] = figsize
 ```
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
@@ -107,7 +108,7 @@ def grad_f(x, a=1):
 Below we visualize the function and its gradient in several points. Please not that gradient of one paremeter function is a scalar. The arrow in the figure represent the magnitude and the sign of the gradient.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 xs = np.linspace(-4,4,200)
 a=13/3.0
 ys = f(xs,a)
@@ -134,10 +135,11 @@ Below is a simple implementation and visualisation of steepest descent. Please p
 ### Learning rate
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 x  = 2
 plt.scatter([x], [f(x,a)],facecolor='green', s=100)
-eta = 0.2
+eta = 0.5
+plt.text(0,30,f"$\\eta$={eta:.3f}")
 ys = f(xs,a)
 plt.plot(xs,ys)
 for i in  range(7):
@@ -148,7 +150,7 @@ for i in  range(7):
   
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## 2D example
 <!-- #endregion -->
 
@@ -359,7 +361,7 @@ def grad(x,y, o, t):
 Below is the implementation and visualization of the stepest descent algorithm. Please play with parameters: starting point, learning rate and number of iterations.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax =  plt.subplots(1,2,figsize=(16,8))
 ax[0].contourf(otg[0], otg[1],vg, levels=20)
 p =[3, 1]
@@ -396,15 +398,56 @@ tw.set_ylim(l2+dl2,u2+dl2);
 plt.close() 
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig
 ```
 
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Figure on the left show the trajectory superimposed on the MSE plot. On the right we show the MSE error and length of the gradient as a function of the number of iterations.
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+fig, ax =  plt.subplots(1,2,figsize=(16,8))
+ax[0].contourf(otg[0], otg[1],vg, levels=20)
+p =[4, 1]
+ax[0].scatter([p[0]], [p[1]],c='none', s=20, edgecolor='red')
+eta = 0.1
+trajectory_list=[]
+n_iter = 50
+for i in range(n_iter):
+    g = grad(rxs, rys, p[0], p[1])
+    p -= eta*g
+    trajectory_list.append(np.concatenate((g,p,[mse(fitf,rxs, rys,*p)])))
+    ax[0].scatter([p[0]], [p[1]],c='red', s=20, edgecolor='red')
+print(p, -g)
+trajectory=np.stack(trajectory_list)
+ax[1].plot(np.arange(n_iter),trajectory[:,-1],'.')
+ax[1].set_xlabel("n iterations")
+ax[1].set_ylabel("MSE", color="blue")
+
+tw = ax[1].twinx()
+tw.spines['right'].set_color('red')
+tw.tick_params(axis='y', colors='red')
+tw.set_ylabel("||grad||", color="red")
+
+tw.plot(np.arange(n_iter),np.linalg.norm(trajectory[:,:2], axis=1),'.r')
+
+# The commands below ensure that the zero of lefvt and right vertical axes are on the same level. 
+# If error does not go to zero this may cause gradinet not to be displayed
+l1,u1 = ax[1].get_ylim()
+l2,u2 = tw.get_ylim();
+nl2=(u2-l2)/(u1-l1)*l1
+dl2=nl2-l2
+tw.set_ylim(l2+dl2,u2+dl2);
+# This is just for notebook, so I can split it on two slides. You can remove this while playing with this
+plt.close() 
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+fig
+```
+
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 ## Blind date
 <!-- #endregion -->
 

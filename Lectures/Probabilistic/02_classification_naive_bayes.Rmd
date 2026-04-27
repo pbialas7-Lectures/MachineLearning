@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -36,43 +36,43 @@ plt.rcParams["figure.figsize"] = [10,6]
 ## Height & weight data set
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 The only data I could find was a [kaggle dataset](https://www.kaggle.com/mustafaali96/weight-height). This data set does not contain any  description of origin but use of inches and pounds suggests an american or english population. The data consists of 10000 points each specifying sex, height and weight of one person.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 The data is in popular "coma separated values" (CSV) format. We will use  [pandas library](https://pandas.pydata.org) to read it. Pandas is a very popular library for working with dataframes and series. It would be really worth your time to become acquainted with it. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 import pandas as pd
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 data = pd.read_csv('../../Data/HeightWeight/weight-height.csv')
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 The `data` is a [Dataframe](https://pandas.pydata.org/pandas-docs/stable/reference/api/pandas.DataFrame.html)
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 type(data)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 which is a kind of "table on steroids". We can look at first _n_ rows using `head` method
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 data.head(n=3)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Another useful method is 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 data.info()
 ```
 

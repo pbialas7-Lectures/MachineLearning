@@ -6,7 +6,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -20,6 +20,10 @@ from torch import nn
 import matplotlib.pyplot as plt
 import numpy as np
 # %matplotlib inline
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
+torch.cuda.is_available()
 ```
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
@@ -58,17 +62,18 @@ The data consists of 28 by 28 pixels 8bit grayscale images of handwritten digits
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig_mnist, axes = plt.subplots(2,4, figsize=(16,8))
+idx = np.random.choice(len(train_labels),8)
 for i in range(8):
     ax=axes.ravel()[i]
-    ax.imshow(train_features[i].numpy(), cmap='Greys');
-    ax.set_title(train_labels[i].item(), fontsize=20)
+    ax.imshow(train_features[idx[i]].numpy(), cmap='Greys');
+    ax.set_title(train_labels[idx[i]].item(), fontsize=20)
 ```
 
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 For the purpose of this notebook I will load only a subset of data. This will make the training of the network much quicker. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 n_samples = 12000
 ```
 
@@ -76,7 +81,7 @@ n_samples = 12000
 Because we will be using the fully connected neural network as our classifier I will flatten each image to 28x28 long 1D array. I will also normalize the grayscale values to [0,1). 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python slideshow={'slide_type': ''}, editable=TRUE}
 dataset = torch.utils.data.TensorDataset( 
     (train_features[:n_samples]/256.0).view(-1,28*28), 
     train_labels[:n_samples])
@@ -257,23 +262,27 @@ After all this being said we can finally start training:
 optim = torch.optim.SGD(model.parameters(), lr=0.1)
 ```
 
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+n_epochs = 10
+```
+
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
-for e in range(5):
+for e in range(n_epochs):
     for features, labels in train_loader:        
         optim.zero_grad()
         pred = model(features)
         loss = my_nll_loss(pred, labels)
         loss.backward()
         optim.step()   
-    print(e, loss.item())        
+    print(f"{e}, {loss.item():.3f}")        
 ```
 
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 Because logarthmic is a monotonicaly increasing function the accuracy functions will work even if the outputs do not represent probabilities. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 model_accuracy(model, train_dataset)
 ```
 
@@ -282,7 +291,20 @@ As you can see the accuracy has increased greatly. But really important is the a
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
-model_accuracy(model, test_dataset)
+mist_test_accuracy=model_accuracy(model, test_dataset)
+mist_test_accuracy
+```
+
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
+**Problem** What would be the accuracy on five digits zip-code?
+<!-- #endregion -->
+
+<!-- #region {"editable": true, "slideshow": {"slide_type": "skip"}} -->
+Assuming that the probabilities of getting  digits right are independent (is this true?) the probability of getting each digit right is 
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
+mist_test_accuracy**5
 ```
 
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
@@ -298,13 +320,14 @@ and load later
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
-model_copy = torch.load("mnist.pt")
+model_copy = torch.load("mnist.pt", weights_only=False)
 ```
 
 ```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 with torch.no_grad():
     pred = model_copy(train_dataset[:][0])
-    ac = torch.sum(torch.argmax(pred,1)==train_dataset[:][1]).to(dtype=torch.float32)/len(train_dataset)
+    ac = torch.sum(
+      torch.argmax(pred,1)==train_dataset[:][1]).to(dtype=torch.float32)/len(train_dataset)
 ac 
 ```
 
@@ -339,7 +362,7 @@ optim = torch.optim.SGD(model.parameters(), lr=0.1)
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
-for e in range(5):
+for e in range(n_epochs):
     for features, labels in train_loader:        
         optim.zero_grad()
         pred = model(features)
@@ -388,7 +411,56 @@ optim = torch.optim.SGD(model.parameters(), lr=0.1)
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time
-for e in range(5):
+for e in range(n_epochs):
+    for features, labels in train_loader:        
+        optim.zero_grad()
+        pred = model(features)
+        loss = ce_loss(pred,labels)
+        loss.backward()
+        optim.step()   
+    print(e, loss.item())        
+```
+
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
+The accuracy functions will still work as before, because softmax  does not change the relative order of the input values.
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+model_accuracy(model, train_dataset)
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+model_accuracy(model, test_dataset)
+```
+
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
+## Sigmoid activation layers
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+model = torch.nn.Sequential(
+    nn.Linear(28*28,1200), nn.Sigmoid(),
+    nn.Linear(1200,600), nn.Sigmoid(),
+    nn.Linear(600,300), nn.Sigmoid(),
+    nn.Linear(300,10)
+)
+```
+
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
+and use the cross entropy loss function that  calculates the log softmax internally
+<!-- #endregion -->
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+ce_loss = torch.nn.CrossEntropyLoss()
+```
+
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+optim = torch.optim.SGD(model.parameters(), lr=0.1)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+# %%time
+for e in range(n_epochs):
     for features, labels in train_loader:        
         optim.zero_grad()
         pred = model(features)
@@ -464,7 +536,7 @@ mse_loss = torch.nn.MSELoss()
 
 ```{python slideshow={'slide_type': '-'}, editable=TRUE}
 # %%time
-for e in range(5):
+for e in range(n_epochs):
     for features, labels in one_hot_train_loader:        
         optim.zero_grad()
         pred = model(features)
@@ -485,3 +557,107 @@ model_accuracy(model, test_dataset)
 <!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 As we can see the accuracy is much smaller: the convergence is slower.
 <!-- #endregion -->
+
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
+## Longer training 
+<!-- #endregion -->
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+if torch.cuda.is_available():
+  torch_device = 'cuda'
+else:
+  torch_device ='cpu'
+
+torch_device
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+model = torch.nn.Sequential(
+    nn.Linear(28*28,1200), nn.ReLU(),
+    nn.Linear(1200,600), nn.ReLU(),
+    nn.Linear(600,300), nn.ReLU(),
+    nn.Linear(300,10)
+)
+model.to(device=torch_device)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+ce_loss = torch.nn.CrossEntropyLoss()
+```
+
+```{python slideshow={'slide_type': ''}, editable=TRUE}
+optim = torch.optim.Adam(model.parameters(), lr=0.005)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+# %%time
+for e in range(100):
+    for features, labels in train_loader:        
+        optim.zero_grad()
+        pred = model(features.to(torch_device))
+        loss = ce_loss(pred,labels.to(torch_device))
+        loss.backward()
+        optim.step()   
+    if (e+1)%10 == 0:  
+      print(e, loss.item())        
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+model.to('cpu')
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+model_accuracy(model, train_dataset)
+```
+
+```{python slideshow={'slide_type': ''}, editable=TRUE}
+model_accuracy(model, test_dataset)
+```
+
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+features, labels = test_dataset[:]
+with torch.no_grad():
+    y = model(features)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+proba = torch.nn.functional.softmax(y,1)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+wrong_predictions, = torch.where((torch.argmax(proba,1)==labels)==False)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
+len(wrong_predictions)
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+def plot_res(index):
+  true_label = labels[index]
+  fig,ax = plt.subplots(1,2,figsize=(12,6))
+  ax[0].stem(np.arange(0,10), proba[index], basefmt='blue');
+  ax[0].axvline(true_label, color='orange');
+  ax[1].imshow(features[index].numpy().reshape(28,28), cmap='Greys');
+  return fig, ax  
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plot_res(wrong_predictions[0]);
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plot_res(wrong_predictions[1]);
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plot_res(wrong_predictions[-1]);
+```
+
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+plot_res(wrong_predictions[-2]);
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
+```

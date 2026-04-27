@@ -6,7 +6,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -232,6 +232,7 @@ Let's see how this  distribution looks like:
 ```{python slideshow={'slide_type': 'slide'}}
 hs = np.linspace(120,215,400)
 plt.plot(hs,pdf_F_cond(hs));
+plt.grid();
 plt.axhline(0.5, linewidth=1, c='green');
 ```
 
@@ -266,7 +267,7 @@ How does this probability change when the _a priori_ probabilities are not equal
 This is not necessary but I will  define a function that creates a desired probability distribution:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), editable=TRUE, jupyter={'source_hidden': True}}
 def make_pdf_F_cond_h(p_F):
     p_M = 1-p_F
     def pdf(h):
@@ -279,11 +280,11 @@ def make_pdf_F_cond_h(p_F):
 This function returns another function so it is an example of [_higher order function_](https://en.wikipedia.org/wiki/Higher-order_function). The returned function is actually a [_closure_](https://simple.wikipedia.org/wiki/Closure_(computer_science)) as it remembers (closes over) the value of ```p_F```. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), jupyter={'source_hidden': True}}
+```{python slideshow={'slide_type': 'slide'}, tags=c("answer"), editable=TRUE, jupyter={'source_hidden': True}}
 pdf_F_cond_fac = make_pdf_F_cond_h(0.25)
 ```
 
-```{python tags=c("answer"), jupyter={'source_hidden': True}}
+```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': ''}, jupyter={'source_hidden': True}}
 hs = np.linspace(120,215,400)
 plt.plot(hs,pdf_F_cond(hs), label='P(F)=1/2');
 plt.plot(hs,pdf_F_cond_fac(hs), label='P(F)=1/4');
@@ -291,7 +292,7 @@ plt.axhline(0.5, linewidth=1, c='green');
 plt.legend();
 ```
 
-```{python tags=c("answer"), jupyter={'source_hidden': True}}
+```{python tags=c("answer"), editable=TRUE, slideshow={'slide_type': ''}, jupyter={'source_hidden': True}}
 from scipy.optimize import fsolve
 threshold_fac = fsolve(lambda h: pdf_F_cond_fac(h)-0.5, 160)
 print(f"{threshold_fac.item():5.1f}cm")
@@ -391,8 +392,8 @@ __Precision__ is the fraction of true positive cases in all cases classified as 
 
 $$\frac{TP}{TP+FP}$$ 
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
-This can be viewed as the probability that given positive results that examplar is really a positive. 
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+This can be viewed as the probability that given a  positive results that examplar is really a positive. 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}} -->
@@ -760,12 +761,12 @@ ax.scatter([thds[imin]], [errs[imin]], c='red', zorder=2);
 ### Error costs
 <!-- #endregion -->
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 More often we are interested not so much in accuracy but in total cost of the mistakes. And as already stated the costs of different types of error can be different. 
 
 Imagine for example such scenario: You classify a person and  if you decide it's a woman you invite her to candlelight dinner. If it's a man you invite him for a beer. You live in a rather conservative society where when a man is invited to a candlelight diner  he will knock your teeth off. If you invite a woman for a beer she will not go. How should you choose a threshold in this case? 
 
-To answer this question you have to  assign a cost to each type of errors. Let's assume that you consider the cost of your teeth as five times bigger then cost of rejected. Then the expected cost is: 
+To answer this question you have to  assign a cost to each type of errors. Let's assume that you consider the cost of your teeth as five times bigger then cost of being rejected. Then the expected cost is: 
 <!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "fragment"}} -->
@@ -802,8 +803,8 @@ ax.plot(thds,errs_c, zorder=1)
 ax.scatter([thds[imin_c]], [errs_c[imin_c]], c='red', zorder=2);
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
-Now the treshold is considerably higher. That's logical as mistaking men for women (false positive) is more costly, you want to be more sure that this is a woman before  asking this person out on   date. 
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
+Now the treshold is considerably higher. That's logical as mistaking men for women (false positive) is more costly, you want to be more sure that this is a man before  asking this person out on   date. 
 A look at the ROC curve shows that we have indeed decreased the false positives rate but at the expense of decreasing the true positive rate as well. 
 <!-- #endregion -->
 
@@ -881,7 +882,7 @@ plt.close()
 fig
 ```
 
-<!-- #region {"slideshow": {"slide_type": "notes"}} -->
+<!-- #region {"slideshow": {"slide_type": "notes"}, "editable": true} -->
 Properties of the ROC curve imply that for the perfect classifier $AUC=1$ and for random guessing $AUC=0.5$. You can learn more about ROC curves and AUC _e.g._ in [here](https://www.researchgate.net/publication/284001844_Some_mathematical_properties_of_the_ROC_curve_and_their_applications). 
 <!-- #endregion -->
 

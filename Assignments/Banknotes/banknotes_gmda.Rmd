@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -23,6 +23,10 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy.stats as st
+```
+
+```{python}
+
 ```
 
 ```{python}
@@ -47,6 +51,13 @@ Perform the Quadratic Discriminant Analysis on this set. Calculate the confusion
 
 Perform Gaussian Mixture Discriminant Analysis on this set as described in the `gaussian_mixture_model_EM_algorithm` notebook. Use two components for positives and two components for negatives. Calculate the confusion matrix, AUC score and plot the ROC curve. 
 
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+mgda = make_predict_proba(gm0, gm1,pi1=0.445)
+```
+
+```{python}
+mgda_test_proba[:10]
+```
 
 ### C.
 
@@ -61,6 +72,18 @@ __Hint__ use the `StratifiedKFold` function from scikit-learn library to generat
 
 
 Assume that 1% of all the customers in your store try to pay with a counterfeit 100PLN bill. If you accept the counterfeit bill you loose 100PLN. If you reject a valid bill,  you may loose the purchase, you estimate this loss as 15PLN on average. For each of the three classifiers find the threshold that minimises your losses and calculates the minimum loss for each classifier. Show the optimal classifiers points on the ROC curves.
+
+```{python}
+fprs, tprs, thds = roc_curve(data_test['counterfeit'],test_proba)
+```
+
+```{python}
+fprs
+```
+
+```{python}
+tprs
+```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
 

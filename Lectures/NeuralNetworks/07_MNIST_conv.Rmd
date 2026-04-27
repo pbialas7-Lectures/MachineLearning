@@ -6,7 +6,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -43,7 +43,7 @@ from mchlearn import tensor_plot
 from matplotlib.animation import FuncAnimation
 ```
 
-<!-- #region {"slideshow": {"slide_type": "slide"}} -->
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 # Convolutional neural networks
 <!-- #endregion -->
 
@@ -77,7 +77,7 @@ The data consists of 28 by 28 pixels 8bit grayscale images of handwritten digits
 train_data.data.shape
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig_mnist, axes = plt.subplots(2,4, figsize=(16,8))
 for i in range(8):
     ax=axes.ravel()[i]
@@ -460,7 +460,7 @@ def update(frame, *fargs):
 anim = FuncAnimation(fig, update, frames=product(range(0,6), range(0,6)), init_func=init, blit=False, repeat=False, fargs=({'first':True},), interval=1000)
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 anim 
 ```
 

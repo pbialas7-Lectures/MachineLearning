@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.17.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -55,7 +55,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import scipy.stats as st
 # %matplotlib inline
-figsize=(10,7)
+figsize=(9,6)
 plt.rcParams["figure.figsize"] = figsize
 import pandas as pd
 ```
@@ -125,7 +125,7 @@ plt.ylabel('Weight');
 and on histograms
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 fig, ax = plt.subplots()
 ax.set_xlabel('Height [m]');
 ax.set_ylabel('Weight [kg]');

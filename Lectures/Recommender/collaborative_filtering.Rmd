@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -180,7 +180,7 @@ ax.set_ylim(-.2,24.2)
 draw_table(ax, R, rows=(11,), cols=())
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 fig, ax = plt.subplots(figsize=(8,12))
 ax.set_xlim(-.2,8.2)
 ax.set_ylim(-.2,24.2)
@@ -239,7 +239,7 @@ def pearson(u,v):
         else:
             return 0
         
-    return np.NAN    
+    return np.nan    
 ```
 
 <!-- #region editable=true slideshow={"slide_type": "skip"} -->
@@ -403,7 +403,7 @@ def pred_item(sim, R, u, adjust):
           if p.size>0:
             hat  = np.dot(s,R[u,p])/s.sum()  
           else:
-            hat = np.NAN
+            hat = np.nan
           ratings.append(hat)
                 
     return ratings
@@ -502,6 +502,9 @@ MAE(R_true, R, R_hat)
 
 <!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Regression based prediction
+
+[A New Prediction Approach Based on Linear 
+Regression for Collaborative Filtering](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/10/fskd11-1.pdf)
 <!-- #endregion -->
 
 <!-- #region editable=true slideshow={"slide_type": ""} -->
@@ -523,7 +526,7 @@ def regression(u,v):
         except ValueError:
             return np.nan
         return lr.slope, lr.intercept
-    return np.NAN    
+    return np.nan    
 ```
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
@@ -574,7 +577,7 @@ def pred_item_reg(sim, R, u, adjust):
               hat  += s[j]*(a*R[u,i]+b)
             hat/=s.sum()      
           else:
-            hat = np.NAN
+            hat = np.nan
           ratings.append(hat)
     return ratings
 ```

@@ -6,7 +6,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -61,15 +61,11 @@ The neural networks make up such a familly of functions. Those functions are mad
 A single neuron can have many inputs and only one output.  
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
-from IPython.core.display import SVG
-```
+<!-- #region {"editable": true, "slideshow": {"slide_type": "slide"}} -->
+<img src="../figures/perceptron.svg" style="display: block; margin: 0 auto;">
+<!-- #endregion -->
 
-```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
-SVG(filename='../figures/perceptron.svg')
-```
-
-<!-- #region {"slideshow": {"slide_type": "skip"}} -->
+<!-- #region {"slideshow": {"slide_type": "skip"}, "editable": true} -->
 There is a number $w_i$, called *weight*, associated with each input. Each input value $x_i$ is multiplied by the weight and the results are added together and Then another  $b$ called 
 *bias* is added to the sum:
 <!-- #endregion -->
@@ -231,7 +227,7 @@ import torch
 relu = torch.nn.ReLU()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 plt.plot(xs,relu(torch.from_numpy(xs)).numpy(),'-')
 plt.grid();
 ```
@@ -240,9 +236,9 @@ plt.grid();
 # Hiden layer
 <!-- #endregion -->
 
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-SVG(filename='../figures/hidden_layer.svg')
-```
+<!-- #region {"editable": true, "slideshow": {"slide_type": ""}} -->
+<img src="../figures/hidden_layer.svg" style="display: block; margin: 0 auto;">
+<!-- #endregion -->
 
 <!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
 $$h_i = a^{(1)}\left(\sum_{j}w^{(1)}_{ij}x_j + b^{(1)}_i\right)$$
@@ -281,9 +277,9 @@ w^{(2)}a^{(1)}\left(w^{(1)}x + b^{(1)}
 # Multilayer perceptron
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-SVG(filename ='../figures/MLP.svg')
-```
+<!-- #region {"slideshow": {"slide_type": "slide"}, "editable": true} -->
+<img src="../figures/MLP.svg" style="display: block; margin: 0 auto">
+<!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 import torch.nn as nn
@@ -339,7 +335,7 @@ optim = torch.optim.SGD(net.parameters(),lr=0.001)
 ```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # %%time 
 loss_list = []
-for epoch in range(25000):
+for epoch in range(200000):
     optim.zero_grad()
     pred = net(t_rxs)
     loss = loss_f(pred, t_rys)
@@ -368,57 +364,4 @@ t_ys = net(xs.view(-1,1))
 plt.scatter(rxs, rys, color='none', edgecolors='black')
 plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
 plt.plot(xs,t_ys.detach().numpy());
-```
-
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
-
-```
-
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-net = nn.Sequential(nn.Linear(in_features=1, out_features=128), nn.ReLU(),
-                   nn.Linear(in_features=128, out_features=64), nn.ReLU(), 
-                   nn.Linear(in_features=64, out_features=32), nn.ReLU(), 
-                   nn.Linear(in_features=32, out_features=1))
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-optim = torch.optim.SGD(net.parameters(),lr=0.1)
-```
-
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-# %%time 
-loss_list = []
-for epoch in range(25000):
-    optim.zero_grad()
-    pred = net(t_rxs)
-    loss = loss_f(pred, t_rys)
-    loss.backward()
-    with torch.no_grad():
-        pred_valid = net(t_rxs_valid)
-        loss_valid = loss_f(pred_valid, t_rys_valid)
-    loss_list.append((loss.item(), loss_valid))  
-    optim.step()
-loss_list = np.array(loss_list)  
-print(f"train loss = {loss.item():.4f} test loss = {loss_valid:.4f}")
-```
-
-```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
-plt.plot(loss_list[::100,0], label='train');
-plt.plot(loss_list[::100,1], label='test');
-plt.legend();plt.title("Loss");
-```
-
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-xs = torch.linspace(-np.pi, np.pi, 200,)
-t_ys = net(xs.view(-1,1))
-```
-
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-plt.scatter(rxs, rys, color='none', edgecolors='black')
-plt.scatter(rxs_valid, rys_valid, color='none', edgecolors='red')
-plt.plot(xs,t_ys.detach().numpy());
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-
 ```

@@ -5,14 +5,14 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.16.1
+      jupytext_version: 1.19.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
     name: python3
 ---
 
-```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'skip'}}
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -20,14 +20,19 @@ import pandas as pd
 
 ```{python slideshow={'slide_type': 'skip'}}
 # %matplotlib inline
-plt.rcParams["figure.figsize"] = [12,8]
+figsize = (8,6)
+plt.rcParams["figure.figsize"] = figsize 
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
+# Categorical variables
+<!-- #endregion -->
+
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 ## Training  Bayes
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "notes"} -->
 As we have shown in the previous lectures training a Bayes classifier amounts to finding the conditional probability distributions of the features $\mathbf{f}$ given the class label $c$. 
 <!-- #endregion -->
 
@@ -128,7 +133,8 @@ As before we will use pandas to read and proccess the data.
 <!-- #endregion -->
 
 ```{python slideshow={'slide_type': 'slide'}}
-cars_data = pd.read_csv("../../Data/Cars/car_data.csv", names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'class'])
+cars_data = pd.read_csv("../../Data/Cars/car_data.csv", 
+                        names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'class'])
 ```
 
 ```{python slideshow={'slide_type': 'fragment'}}
@@ -287,21 +293,22 @@ However this classifier requires the  class labels and attributes to be  integer
 from sklearn.preprocessing import  OrdinalEncoder
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 features_encoder = OrdinalEncoder(dtype='int32')
 features_encoder.fit(cars_train)
-train_encoded = pd.DataFrame(features_encoder.transform(cars_train), columns=features_encoder.get_feature_names_out())
+train_encoded = pd.DataFrame(features_encoder.transform(cars_train), 
+                             columns=features_encoder.get_feature_names_out())
 ```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
 np.bincount(train_encoded.iloc[:,-1])
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 cnb.fit(train_encoded.iloc[:,:-1], train_encoded.iloc[:,-1])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 We can view the learned probabilities of this classifier  using its `feature_log_prob` attribute:
 <!-- #endregion -->
 
@@ -309,20 +316,12 @@ We can view the learned probabilities of this classifier  using its `feature_log
 features_encoder.categories_[-1]
 ```
 
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-
-```
-
-```{python editable=TRUE, slideshow={'slide_type': ''}}
-
-```
-
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 pd.DataFrame(np.exp( cnb.feature_log_prob_[0], ), 
              columns=features_encoder.categories_[0], index=features_encoder.categories_[-1]).style.set_caption(f"{features_encoder.feature_names_in_[0]}")
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 Comparing with our calculations we see a almost perfect agreement. Mowever we get all four probabilities in the last line like required. The two values are not zero because of smoothing. 
 <!-- #endregion -->
 
@@ -331,24 +330,25 @@ from sklearn.metrics import accuracy_score
 accuracy_score(train_encoded.iloc[:,-1], cnb.predict(train_encoded.iloc[:,0:-1]), normalize=True)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 After training the classifier we can use it to  make predictions on the test set
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
-test_encoded = pd.DataFrame(features_encoder.transform(cars_test), columns=features_encoder.get_feature_names_out())
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
+test_encoded = pd.DataFrame(features_encoder.transform(cars_test), 
+                            columns=features_encoder.get_feature_names_out())
 encoded_test_class = test_encoded.iloc[:,-1]
 ```
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 predicted_test_class = cnb.predict(test_encoded.iloc[:,:-1])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 and test them
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 from sklearn.metrics import accuracy_score
 ```
 
@@ -356,31 +356,31 @@ from sklearn.metrics import accuracy_score
 accuracy_score(encoded_test_class, predicted_test_class, normalize=True)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 Actually the classifier has a method for predicting and measuring accuracy
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 cnb.score(test_encoded.iloc[:,:-1], encoded_test_class)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 which unsuprisingly gives same results
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 As a last check I will look at the class distribution in the predicted and real labels. As it may happen that with unbalanced  classes  one class can be e.g. totaly misclassified without affecting accuracy. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 np.bincount(predicted_test_class.astype('int64'))
 ```
 
-```{python slideshow={'slide_type': '-'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': '-'}}
 np.bincount(encoded_test_class.astype('int64'))
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 ## Multiclass metrics
 <!-- #endregion -->
 
@@ -388,29 +388,29 @@ np.bincount(encoded_test_class.astype('int64'))
 from sklearn.metrics import multilabel_confusion_matrix, confusion_matrix, ConfusionMatrixDisplay
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 ### Confusion matrix
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "notes"} -->
 The accuracy  generalises intuitively to non-binary classification.  The confusion matrix also generalises to this case.  
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 pred = predicted_test_class
 true = encoded_test_class
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 confusion_matrix(true, pred)
 ```
 
-```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'slide'}}
 ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true', 
                                         display_labels=features_encoder.categories_[-1]);
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 ### Averaging 
 <!-- #endregion -->
 
@@ -500,11 +500,11 @@ $$F_\mu = 2\cdot\frac{Precision_\mu\cdot Recall_\mu}{Precision_\mu + Recall_\mu}
 print(2*precision_mu*recall_mu/(precision_mu+recall_mu))
 ```
 
-<!-- #region tags=["problem"] slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] -->
 #### Problem
 <!-- #endregion -->
 
-<!-- #region tags=["problem"] slideshow={"slide_type": "-"} -->
+<!-- #region slideshow={"slide_type": "-"} tags=["problem"] -->
   Show that $Recall_\mu$ = $Precision_\mu = Accuracy$
 <!-- #endregion -->
 
@@ -552,7 +552,7 @@ recall_score(encoded_test_class, predicted_test_class, average='macro')
 and for precision
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 $$Precision_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i}$$
 <!-- #endregion -->
 
@@ -594,15 +594,15 @@ f1_score(encoded_test_class, predicted_test_class, average='macro')
 ### Weighted averaging 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "skip"} -->
 And finally the weighted averaging is like macro averaging but we  weight the average by the support of each class _i.e._ the number of labels of each class. E.g. for precision
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} editable=true -->
+<!-- #region editable=true slideshow={"slide_type": "slide"} -->
 $$Precision_M = \sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i} \frac{P_k}{\sum_k P_i}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
+```{python editable=TRUE, slideshow={'slide_type': 'fragment'}}
 tot = 0
 den = 0
 for i in range(3):
@@ -617,11 +617,11 @@ print(prec)
 precision_score(encoded_test_class, predicted_test_class, average='weighted')
 ```
 
-<!-- #region tags=["problem"] slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] -->
 #### Problem 
 <!-- #endregion -->
 
-<!-- #region tags=["problem"] slideshow={"slide_type": "-"} -->
+<!-- #region slideshow={"slide_type": "-"} tags=["problem"] -->
  Show that weighted averaging for recall gives same result as micro averaging.
 <!-- #endregion -->
 
