@@ -5,7 +5,7 @@ jupyter:
       extension: .Rmd
       format_name: rmarkdown
       format_version: '1.2'
-      jupytext_version: 1.19.1
+      jupytext_version: 1.17.1
   kernelspec:
     display_name: Python 3 (ipykernel)
     language: python
@@ -18,7 +18,7 @@ import numpy as np
 import pandas as pd
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 # %matplotlib inline
 figsize = (8,6)
 plt.rcParams["figure.figsize"] = figsize 
@@ -36,11 +36,11 @@ plt.rcParams["figure.figsize"] = figsize
 As we have shown in the previous lectures training a Bayes classifier amounts to finding the conditional probability distributions of the features $\mathbf{f}$ given the class label $c$. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
 $$P(\mathbf{F}=\mathbf{f}|C=c)$$
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 In case of the Naive bayes classifier the $n_f$ features are conditionally independent 
 <!-- #endregion -->
 
@@ -124,48 +124,48 @@ where $\alpha\ge 0$ is a smoothing parameter. The use of  non-zero smoothing par
 As an example we will use the [car evaluation dataset](http://archive.ics.uci.edu/ml/datasets/Car+Evaluation) from [UCI Machine Learning repository](http://archive.ics.uci.edu/ml/). It contains 1728 samples with six atttributes (features) each. The class label is the evaluation of the car: $\{unacc, acc, good, vgood\}$.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 All six parameters are categorical and the data contains exactly one sample for each possible combination of attributes values (in this respect this is quite peculiar dataset).
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 As before we will use pandas to read and proccess the data.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 cars_data = pd.read_csv("../../Data/Cars/car_data.csv", 
                         names=['buying', 'maint', 'doors', 'persons', 'lug_boot', 'safety', 'class'])
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 cars_data.head()
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 cars_data.info()
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Method `groupby`  divides the data frame into groups based on the value of the given colum(s)
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 cars_by_class = cars_data.groupby('class')
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 The size of each group can be calculated using method `size`
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 cars_by_class.size()
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 As we can see the classes are not very well ballanced with relatively small number of cars in two best  classes.  So I have decided to join those two classes together introducing a new classification
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 def bargain(c):
     if c in ['good', 'vgood']:
         return 'good'
@@ -175,62 +175,62 @@ def bargain(c):
         return 'bad'
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 cars_data['bargain'] = cars_data['class'].apply(bargain)
 cars_data = cars_data.drop('class',axis=1)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We start by dividing the data set into training and testing. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 from sklearn.model_selection import train_test_split
 ```
 
-```{python slideshow={'slide_type': 'skip'}}
+```{python slideshow={'slide_type': 'skip'}, editable=TRUE}
 seed = 678565
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 cars_train, cars_test = train_test_split(cars_data, train_size=0.75, random_state=seed)
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 cars_train['bargain'].value_counts()
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 cars_test['bargain'].value_counts()
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Function `train_test_split` has an option to _stratify_ data based on the values of one colum
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 cars_train, cars_test = train_test_split(cars_data, train_size=0.75, stratify=cars_data['bargain'],
                                          random_state = seed)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 In this way the split was done separately for each  class label. That way we obtain as a result slightly more balanced sets
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 cars_train['bargain'].value_counts()
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 cars_test['bargain'].value_counts()
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 We will use the Naive Bayes.
 There are many ways that we can calculate the estimators. We can start by grouping the dataframe according to  feature values
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 cars_training_grouped = cars_train.groupby(['bargain', 
                                             'buying',
                                             'maint',
@@ -240,56 +240,56 @@ cars_training_grouped = cars_train.groupby(['bargain',
                                             'safety'])
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and count the size of each group
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 group_counts=cars_training_grouped.size()
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 group_counts
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 The `sum` method can make a partial sums which we can use to extract $n^{c}_{ij}$ values
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 # The level argument list the levels not summed over i.e. left in the result.
 group_counts.groupby(level = ['bargain', 'buying'] ).sum()
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and finally calculate the probabilities
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 (group_counts.groupby(level = ['bargain', 'buying'] ).sum() +1 )/(group_counts.groupby(level='bargain').sum()+4)
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ## Scikit-learn
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 However if you look closely you will notice one problem: the 'good' class does not contain any values for 'high' and 'vhigh'  attribute values! That means of course that they are zero, but it complicates the calculations. Instead of fixing this by hand we will use the tools from the [scikit-learn](https://scikit-learn.org/stable/index.html) library. This library has a class implementing just what we need
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 from sklearn.naive_bayes import CategoricalNB
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 cnb = CategoricalNB(alpha=1)
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 However this classifier requires the  class labels and attributes to be  integer numbers counted from zero. Fortunatelly scikit-learn also includes a class for converting from labels to ordinals:
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.preprocessing import  OrdinalEncoder
 ```
 
@@ -414,11 +414,11 @@ ConfusionMatrixDisplay.from_predictions(true, pred, normalize='true',
 ### Averaging 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 Other metrics are defined only for binary classification problem as they rely on a 2x2 confusion matrix.  A way to generalise them to multiclass classification it to treat a $k$ class classifcation problem as $k$ binary classification problems: class   $C_i$ against the rest. We combine the final score out of binary metrics for each binary classification. 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment", "slideshow": {"slide_type": "slide"}} -->
+<!-- #region slideshow={"slide_type": "fragment", "slideshow": {"slide_type": "slide"}} editable=true -->
 <table style="font-size:1.5em;">
 <tr> <th>         </th> <th colspan=2>predicted</th></tr>
     <tr> <th>actual</th> <th>N  </th> <th>P  </th> <th>total</th></tr>
@@ -427,7 +427,7 @@ Other metrics are defined only for binary classification problem as they rely on
 </table>
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 def stat(y_true, y_pred, c):
     lbl_true = np.where(y_true==c,1,0)
     lbl_pred = np.where(y_pred==c,1,0)
@@ -435,34 +435,34 @@ def stat(y_true, y_pred, c):
     return TP, FP,FN, TN
 ```
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 for i in range(3):
     print( stat(true,pred, i))
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 Once we have the statistics for each binary classifier we can combine the together. We will consider _micro_ and _macro_ averaging. 
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 mcf = multilabel_confusion_matrix(true, pred)
 print(mcf)
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Micro averaging
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 In micro averaging we first calculate the summary values of TP, FP, TN and TN and use them to calculate the total score. 
 We will start with _recall_ which is just another name for true positives rate.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
 $$Recall_\mu = \frac{\sum_i TP_i}{\sum_i(TP_i+FN_i)}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 num = 0
 den = 0
 for i in range(3):
@@ -473,11 +473,11 @@ recall_mu = num/den
 print(num, den, recall_mu   )
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 $$Precision_\mu = \frac{\sum_i TP_i}{\sum_i(TP_i+FP_i)}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 num = 0
 den = 0
 for i in range(3):
@@ -488,54 +488,54 @@ precision_mu = num/den
 print(num, den, precision_mu    )
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and $F_1$ is then  harmonic mean of the two
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 $$F_\mu = 2\cdot\frac{Precision_\mu\cdot Recall_\mu}{Precision_\mu + Recall_\mu}$$
 <!-- #endregion -->
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 print(2*precision_mu*recall_mu/(precision_mu+recall_mu))
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] -->
+<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] editable=true -->
 #### Problem
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "-"} tags=["problem"] -->
+<!-- #region slideshow={"slide_type": "-"} tags=["problem"] editable=true -->
   Show that $Recall_\mu$ = $Precision_\mu = Accuracy$
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 There is no surprise that scikit-learn library has functions to calculate those metrics
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.metrics import *
 ```
 
-```{python slideshow={'slide_type': '-'}}
+```{python slideshow={'slide_type': '-'}, editable=TRUE}
 print(
     recall_score(encoded_test_class, predicted_test_class, average='micro'),
     precision_score(encoded_test_class, predicted_test_class, average='micro'),
     f1_score(encoded_test_class, predicted_test_class, average='micro'))
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Macro averaging
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 With macro averaging we  calculate  score for each binary classifier separately and average them. So for recall
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "fragment"} -->
+<!-- #region slideshow={"slide_type": "fragment"} editable=true -->
 $$Recall_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FN_i}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 tot = 0
 for i in range(3):
     ((tn, fp), (fn, tp)) =  mcf[i]
@@ -544,11 +544,11 @@ rec = tot/3
 print(rec)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 recall_score(encoded_test_class, predicted_test_class, average='macro')
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and for precision
 <!-- #endregion -->
 
@@ -556,7 +556,7 @@ and for precision
 $$Precision_M = \frac{1}{k}\sum_{i=0}^{k-1}\frac{TP_i}{TP_i+FP_i}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 tot = 0
 for i in range(3):
     ((tn, fp), (fn, tp)) =  mcf[i]
@@ -565,19 +565,19 @@ prec =  tot/3
 print(prec)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 precision_score(encoded_test_class, predicted_test_class, average='macro')
 ```
 
-<!-- #region slideshow={"slide_type": "skip"} -->
+<!-- #region slideshow={"slide_type": "skip"} editable=true -->
 and $F_1$ score is
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 $$F_1 = \frac{1}{k}\sum_{i=0}^{k-1}\frac{2\cdot TP_i}{TP_i+FP_i +TP_i +FN_i}$$
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 tot = 0
 for i in range(3):
     ((tn, fp), (fn, tp)) =  mcf[i]
@@ -586,11 +586,11 @@ f =  tot/3
 print(f)
 ```
 
-```{python}
+```{python editable=TRUE, slideshow={'slide_type': ''}}
 f1_score(encoded_test_class, predicted_test_class, average='macro')
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} -->
+<!-- #region slideshow={"slide_type": "slide"} editable=true -->
 ### Weighted averaging 
 <!-- #endregion -->
 
@@ -613,34 +613,42 @@ prec = tot/den
 print(prec)
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 precision_score(encoded_test_class, predicted_test_class, average='weighted')
 ```
 
-<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] -->
+<!-- #region slideshow={"slide_type": "slide"} tags=["problem"] editable=true -->
 #### Problem 
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "-"} tags=["problem"] -->
+<!-- #region slideshow={"slide_type": "-"} tags=["problem"] editable=true -->
  Show that weighted averaging for recall gives same result as micro averaging.
 <!-- #endregion -->
 
-<!-- #region slideshow={"slide_type": "notes"} -->
+<!-- #region slideshow={"slide_type": "notes"} editable=true -->
 As you may have guessed scikit-learn library has some convenient functions that calculate those metrics at once.
 <!-- #endregion -->
 
-```{python slideshow={'slide_type': 'slide'}}
+```{python slideshow={'slide_type': 'slide'}, editable=TRUE}
 from sklearn.metrics import precision_recall_fscore_support,  classification_report
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 precision_recall_fscore_support(encoded_test_class, predicted_test_class, beta = 2, average = 'macro')
 ```
 
-```{python slideshow={'slide_type': 'fragment'}}
+```{python slideshow={'slide_type': 'fragment'}, editable=TRUE}
 print(classification_report(encoded_test_class, predicted_test_class))
 ```
 
 ```{python editable=TRUE, slideshow={'slide_type': ''}}
 features_encoder.categories_
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
+```
+
+```{python editable=TRUE, slideshow={'slide_type': ''}}
+
 ```
